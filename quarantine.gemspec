@@ -9,15 +9,14 @@ require "quarantine/version"
 Gem::Specification.new do |s|
   s.name = "quarantine"
   s.version = Quarantine::VERSION
-  s.authors = ["Eric Zhu"]
+  s.authors = ["Flexport Engineering, Eric Zhu"]
   s.email = ["ericzhu77@gmail.com"]
-  s.summary = "Dynamically query a list of quarantined flaky tests"
+  s.summary = "Quarantine flaky Ruby Rspec tests"
+  s.homepage = "https://github.com/flexport/quarantine"
+  s.license = "MIT"
+  s.files = Dir["{lib}/**/*", "*.md", "*.gemspec"]
 
-  s.files = Dir["{lib}/**/*", "README.md"]
-  s.test_files = Dir["spec/**/*"]
-
+  s.add_dependency("rspec", "~> 3.8.0")
   s.add_dependency("aws-sdk", "~> 2.11.41")
-  s.add_dependency("rails")
-  s.add_dependency("rspec")
   s.add_dependency("rspec-retry", "~> 0.6.1")
 end
