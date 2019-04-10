@@ -15,7 +15,7 @@ Gem::Specification.new do |s|
   s.homepage = 'https://github.com/flexport/quarantine'
   s.license = 'MIT'
   s.files = Dir['{lib, bin}/**/*', '*.md', '*.gemspec']
-  s.executables = ["quarantine_dynamodb"]
+  s.executables = ['quarantine_dynamodb']
 
   s.add_dependency('aws-sdk', '~> 2.11.41')
   s.add_dependency('rspec', '~> 3.8.0')
