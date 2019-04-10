@@ -11,24 +11,34 @@ The purpose of `quarantine` is to provide a run-time solution to disabling flaky
 4. The flaky test has been fixed and the Jira ticket is closed resulting in the test automatically being removed from the list of quarantined tests
 
 ## Setup Quarantine Gem
-1. In your `spec_helper.rb` include the quarantine and rspec-retry gem
+
+1. Create tables in your database required for the gem the upload and pull quarantined test info
+```
+bundle exec quarantine_dynamodb -h            # see all options
+
+bundle exec quarantine_dynamodb -r us-west-1  # create the tables in us-west-1 in aws dynamodb
+                                              # with default table names "quarantine_list" and
+                                              # and "master_failed_tests"
+```
+
+2. In your `spec_helper.rb` include the quarantine and rspec-retry gem
 ```
 require "quarantine"
 require "rspec-retry"
 ```
-2. Configure rspec-retry to retry failed tests
+3. Configure rspec-retry to retry failed tests
 ```
 config.around(:each) do |example|
   example.run_with_retry(retry: 2)
 end
 ```
-3. Bind quarantine to RSpec in a CI environment
+4. Bind quarantine to RSpec in a CI environment
 ```
 if ENV[CI] && ENV[branch] == "master"
   Quarantine.bind
 end
 ```
-4. Setup two tables in dynamodb in the correct region with the correct fields
+5. Setup two tables in dynamodb in the correct region with the correct fields
 ```
 @TODO: script to create tables in region
 ```
