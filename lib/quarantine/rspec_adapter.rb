@@ -1,5 +1,3 @@
-# TEAM: backend_infra
-
 module RSpecAdapter
   # Purpose: create an instance of Quarantine which contains information
   #          about the test suite (ie. quarantined tests) and binds RSpec configurations
@@ -18,12 +16,12 @@ module RSpecAdapter
   # Purpose: binds rspec configuration variables
   def bind_rspec_configurations
     ::RSpec.configure do |config|
-      config.add_setting(:quarantine_list_table, default: "quarantine_list")
-      config.add_setting(:quarantine_failed_tests_table, default: "master_failed_tests")
-      config.add_setting(:skip_quarantined_tests, default: true)
-      config.add_setting(:quarantine_record_failed_tests, default: true)
-      config.add_setting(:quarantine_record_flaky_tests, default: true)
-      config.add_setting(:quarantine_logging, default: true)
+      config.add_setting(:quarantine_list_table, { default: 'quarantine_list' })
+      config.add_setting(:quarantine_failed_tests_table, { default: 'master_failed_tests' })
+      config.add_setting(:skip_quarantined_tests, { default: true })
+      config.add_setting(:quarantine_record_failed_tests, { default: true })
+      config.add_setting(:quarantine_record_flaky_tests, { default: true })
+      config.add_setting(:quarantine_logging, { default: true })
     end
   end
 
@@ -54,26 +52,24 @@ module RSpecAdapter
         metadata = example.metadata
 
         # will record the failed test if is not quarantined and it is on it's final retry from the rspec-retry gem
-        if RSpec.configuration.quarantine_record_failed_tests && !quarantine.test_quarantined?(example) && metadata[:retry_attempts] + 1 == metadata[:retry] && example.exception
-          quarantine.record_failed_test(example)
-        end
+        quarantine.record_failed_test(example) if
+          RSpec.configuration.quarantine_record_failed_tests &&
+          !quarantine.test_quarantined?(example) &&
+          metadata[:retry_attempts] + 1 == metadata[:retry] && example.exception
 
         # will record the flaky test if is not quarantined and it failed the first run but passed a subsequent run
-        if RSpec.configuration.quarantine_record_flaky_tests && !quarantine.test_quarantined?(example) && metadata[:retry_attempts] > 0 && example.exception.nil?
-          quarantine.record_flaky_test(example)
-        end
+        quarantine.record_flaky_test(example) if
+          RSpec.configuration.quarantine_record_flaky_tests &&
+          !quarantine.test_quarantined?(example) &&
+          metadata[:retry_attempts] > 0 && example.exception.nil?
       end
     end
 
     ::RSpec.configure do |config|
       config.after(:suite) do
-        if RSpec.configuration.quarantine_record_failed_tests
-          quarantine.upload_tests(:failed)
-        end
+        quarantine.upload_tests(:failed) if RSpec.configuration.quarantine_record_failed_tests
 
-        if RSpec.configuration.quarantine_record_flaky_tests
-          quarantine.upload_tests(:flaky)
-        end
+        quarantine.upload_tests(:flaky) if RSpec.configuration.quarantine_record_flaky_tests
       end
     end
   end
@@ -82,9 +78,7 @@ module RSpecAdapter
   def bind_logger(quarantine)
     ::RSpec.configure do |config|
       config.after(:suite) do
-        if RSpec.configuration.quarantine_logging
-          RSpec.configuration.reporter.message(quarantine.summary)
-        end
+        RSpec.configuration.reporter.message(quarantine.summary) if RSpec.configuration.quarantine_logging
       end
     end
   end
