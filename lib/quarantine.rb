@@ -96,10 +96,10 @@ class Quarantine
           table_name,
           tests,
           {
-            build_job_id: ENV["BUILDKITE_JOB_ID"] || "-1",
-             created_at: timestamp,
-            updated_at: timestamp
-          }
+            build_job_id: ENV['BUILDKITE_JOB_ID'] || '-1',
+            created_at: timestamp,
+            updated_at: timestamp,
+          },
         )
       end
     rescue Quarantine::DatabaseError => e
