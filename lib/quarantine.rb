@@ -1,13 +1,9 @@
-# TEAM: backend_infra
-
-require "aws-sdk"
-require "rspec/retry"
-require "quarantine/rspec_adapter"
-require "quarantine/test"
-require "quarantine/databases/base"
-require "quarantine/databases/dynamo_db"
-
-class QuarantineError < StandardError; end
+require 'aws-sdk'
+require 'rspec/retry'
+require 'quarantine/rspec_adapter'
+require 'quarantine/test'
+require 'quarantine/databases/base'
+require 'quarantine/databases/dynamo_db'
 
 class Quarantine
   extend RSpecAdapter
@@ -25,14 +21,16 @@ class Quarantine
     when :dynamodb, nil
       @database = Quarantine::Databases::DynamoDB.new(options)
     else
-      raise UnsupportedDatabaseError.new("Quarantine does not support integrations with #{options[:database]}")
+      raise Quarantine::UnsupportedDatabaseError.new(
+        "Quarantine does not support integrations with #{options[:database]}"
+      )
     end
 
     @quarantine_map = {}
     @failed_tests = []
     @flaky_tests = []
-    @buildkite_build_number = ENV["BUILDKITE_BUILD_NUMBER"] || "-1"
-    @summary = {id: "quarantine", quarantined_tests: [], flaky_tests: [], dynamodb_failures: []}
+    @buildkite_build_number = ENV['BUILDKITE_BUILD_NUMBER'] || '-1'
+    @summary = { id: 'quarantine', quarantined_tests: [], flaky_tests: [], dynamodb_failures: [] }
   end
 
   # Params: void
@@ -46,23 +44,30 @@ class Quarantine
       quarantine_list = database.scan(RSpec.configuration.quarantine_list_table)
     rescue Quarantine::DatabaseError => e
       summary[:dynamodb_failures] << "#{e.cause.class}: #{e.cause.message}"
-      raise Quarantine::DatabaseError.new("Failed to pull the quarantine list from #{RSpec.configuration.quarantine_list_table} because of #{e.cause.class}: #{e.cause.message}")
+      raise Quarantine::DatabaseError.new(
+        <<~ERROR_MSG
+          Failed to pull the quarantine list from #{RSpec.configuration.quarantine_list_table}
+          because of #{e.cause.class}: #{e.cause.message}
+        ERROR_MSG
+      )
     end
 
     quarantine_list.each do |example|
       # on the rare occassion there are duplicate tests ids in the quarantine_list,
       # quarantine the most recent instance of the test (det. through build_number)
       # and ignore the older instance of the test
-      next if quarantine_map.key?(example["id"]) && example["build_number"].to_i < quarantine_map[example["id"]].build_number.to_i
+      next if
+        quarantine_map.key?(example['id']) &&
+        example['build_number'].to_i < quarantine_map[example['id']].build_number.to_i
 
       quarantine_map.store(
-        example["id"],
+        example['id'],
         Quarantine::Test.new(
-          example["id"],
-          example["full_description"],
-          example["location"],
-          example["build_number"],
-        ),
+          example['id'],
+          example['full_description'],
+          example['location'],
+          example['build_number']
+        )
       )
     end
   end
@@ -80,7 +85,9 @@ class Quarantine
       tests = flaky_tests
       table_name = RSpec.configuration.quarantine_list_table
     else
-      raise Quarantine::UnknownUploadError.new("Quarantine gem did not know how to handle #{type} upload of tests to dynamodb")
+      raise Quarantine::UnknownUploadError.new(
+        "Quarantine gem did not know how to handle #{type} upload of tests to dynamodb"
+      )
     end
     begin
       if tests.length < 10 && tests.length > 0
@@ -90,9 +97,9 @@ class Quarantine
           tests,
           {
             build_job_id: ENV["BUILDKITE_JOB_ID"] || "-1",
-            created_at: timestamp,
-            updated_at: timestamp,
-          },
+             created_at: timestamp,
+            updated_at: timestamp
+          }
         )
       end
     rescue Quarantine::DatabaseError => e
@@ -109,7 +116,7 @@ class Quarantine
       example.id,
       example.full_description,
       example.location,
-      buildkite_build_number,
+      buildkite_build_number
     )
   end
 
@@ -122,7 +129,7 @@ class Quarantine
       example.id,
       example.full_description,
       example.location,
-      buildkite_build_number,
+      buildkite_build_number
     )
 
     @flaky_tests << flaky_test
@@ -142,7 +149,7 @@ class Quarantine
       example.id,
       example.full_description,
       example.location,
-      buildkite_build_number,
+      buildkite_build_number
     )
   end
 

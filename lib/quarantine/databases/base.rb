@@ -1,5 +1,3 @@
-# TEAM: backend_infra
-
 class Quarantine
   module Databases
     class Base

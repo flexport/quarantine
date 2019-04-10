@@ -1,5 +1,3 @@
-# TEAM: backend_infra
-
 class Quarantine
   class Test
     attr_accessor :id
@@ -19,7 +17,7 @@ class Quarantine
         id: id,
         full_description: full_description,
         location: location,
-        build_number: build_number,
+        build_number: build_number
       }
     end
   end
