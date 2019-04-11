@@ -14,9 +14,10 @@ Gem::Specification.new do |s|
   s.summary = 'Quarantine flaky Ruby Rspec tests'
   s.homepage = 'https://github.com/flexport/quarantine'
   s.license = 'MIT'
-  s.files = Dir['{lib}/**/*', '*.md', '*.gemspec']
+  s.files = Dir['{lib, bin}/**/*', '*.md', '*.gemspec']
+  s.executables = ['quarantine_dynamodb']
 
   s.add_dependency('aws-sdk', '~> 2.11.41')
-  s.add_dependency('rspec', '>= 3.0', '<= 4.0')
-  s.add_dependency('rspec-retry', '~> 0.6.1')
+  s.add_dependency('rspec', '>= 3.0')
+  s.add_dependency('rspec-retry', '>= 0.6.1')
 end

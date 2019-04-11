@@ -49,6 +49,29 @@ class Quarantine
       rescue Aws::DynamoDB::Errors::ServiceError
         raise Quarantine::DatabaseError
       end
+
+      def create_table(table_name, attributes, additional_arguments = {})
+        dynamodb.create_table(
+          {
+            table_name: table_name,
+            attribute_definitions: attributes.map do |attribute|
+              {
+                attribute_name: attribute[:attribute_name],
+                attribute_type: attribute[:attribute_type]
+              }
+            end,
+            key_schema: attributes.map do |attribute|
+              {
+                attribute_name: attribute[:attribute_name],
+                key_type: attribute[:key_type]
+              }
+            end,
+            **additional_arguments
+          }
+        )
+      rescue Aws::DynamoDB::Errors::ServiceError
+        raise Quarantine::DatabaseError
+      end
     end
   end
 end

@@ -1,0 +1,10 @@
+#!/usr/bin/env ruby
+
+require 'aws-sdk'
+require 'optparse'
+
+require_relative '../lib/quarantine/cli'
+
+cli = Quarantine::CLI.new
+cli.parse
+cli.create_tables
