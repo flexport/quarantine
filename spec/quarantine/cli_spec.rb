@@ -80,11 +80,11 @@ describe Quarantine::CLI do
         cli.create_tables
       end
 
-      it 'raises exception in Quarantine::DatabaseError exception occurs' do
+      it 'raises exception if Quarantine::DatabaseError exception occurs' do
         allow(Quarantine::Databases::DynamoDB).to receive(:new).and_return(dynamodb)
-        allow(dynamodb).to receive(:create_table).and_raise(Quarantine::DatabaseError.new)
+        allow(dynamodb).to receive(:create_table).and_raise(Quarantine::DatabaseError.new('db error'))
 
-        cli.create_tables
+        expect { cli.create_tables }.to_not raise_error
       end
     end
   end

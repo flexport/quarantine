@@ -73,14 +73,12 @@ class Quarantine
         dynamodb.create_table(options[:quarantine_list_table_name], attributes, additional_arguments)
       rescue Quarantine::DatabaseError => e
         warn "#{e&.cause&.class}: #{e&.cause&.message}"
-        raise e
       end
 
       begin
         dynamodb.create_table(options[:failed_test_table_name], attributes, additional_arguments)
       rescue Quarantine::DatabaseError => e
         warn "#{e&.cause&.class}: #{e&.cause&.message}"
-        raise e
       end
     end
   end
