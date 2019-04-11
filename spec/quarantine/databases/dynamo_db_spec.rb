@@ -124,34 +124,35 @@ describe Quarantine::Databases::DynamoDB do
 
     it 'has arguments mapped and splatterd correctly' do
       attributes = [
-        { attribute_name: 'a1', attribute_type: 'S', key_type: 'HASH'},
-        { attribute_name: 'a2', attribute_type: 'S', key_type: 'RANGE'}
+        { attribute_name: 'a1', attribute_type: 'S', key_type: 'HASH' },
+        { attribute_name: 'a2', attribute_type: 'S', key_type: 'RANGE' }
       ]
 
       additional_arguments = {
-        a3: { a4: "a4", a5: "a5" },
-        a6: "a6"
-      }
-      
-      expect(database.dynamodb).to receive(:create_table).with(
-      {
-        table_name: 'foo',
-        attribute_definitions: [
-          { attribute_name: 'a1', attribute_type: 'S'},
-          { attribute_name: 'a2', attribute_type: 'S'}
-        ],
-        key_schema: [
-          { attribute_name: 'a1', key_type: 'HASH'},
-          { attribute_name: 'a2', key_type: 'RANGE'},
-        ],
-        a3: { a4: "a4", a5: "a5" },
+        a3: { a4: 'a4', a5: 'a5' },
         a6: 'a6'
-      })
+      }
 
-      database.create_table('foo', attributes, additional_arguments)      
+      expect(database.dynamodb).to receive(:create_table).with(
+        {
+          table_name: 'foo',
+          attribute_definitions: [
+            { attribute_name: 'a1', attribute_type: 'S' },
+            { attribute_name: 'a2', attribute_type: 'S' }
+          ],
+          key_schema: [
+            { attribute_name: 'a1', key_type: 'HASH' },
+            { attribute_name: 'a2', key_type: 'RANGE' }
+          ],
+          a3: { a4: 'a4', a5: 'a5' },
+          a6: 'a6'
+        }
+      )
+
+      database.create_table('foo', attributes, additional_arguments)
     end
 
-    it "throws exception Quarantine::DatabaseError on AWS error" do
+    it 'throws exception Quarantine::DatabaseError on AWS error' do
       error = Aws::DynamoDB::Errors::IndexNotFoundException.new(Quarantine, 'index not found')
       allow(database.dynamodb).to receive(:create_table).and_raise(error)
       expect { database.create_table('foo', [], {}) }.to raise_error(Quarantine::DatabaseError)

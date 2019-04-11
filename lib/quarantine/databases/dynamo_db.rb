@@ -3,7 +3,7 @@ require 'quarantine/databases/base'
 require 'quarantine/error'
 
 class Quarantine
-  module Databases  
+  module Databases
     class DynamoDB < Base
       attr_accessor :dynamodb
 
@@ -54,13 +54,13 @@ class Quarantine
         dynamodb.create_table(
           {
             table_name: table_name,
-            :attribute_definitions => attributes.map do |attribute|
+            attribute_definitions: attributes.map do |attribute|
               {
                 attribute_name: attribute[:attribute_name],
                 attribute_type: attribute[:attribute_type]
               }
             end,
-            :key_schema => attributes.map do |attribute|
+            key_schema: attributes.map do |attribute|
               {
                 attribute_name: attribute[:attribute_name],
                 key_type: attribute[:key_type]
@@ -69,8 +69,8 @@ class Quarantine
             **additional_arguments
           }
         )
-        rescue Aws::DynamoDB::Errors::ServiceError
-          raise Quarantine::DatabaseError
+      rescue Aws::DynamoDB::Errors::ServiceError
+        raise Quarantine::DatabaseError
       end
     end
   end

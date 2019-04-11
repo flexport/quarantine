@@ -5,7 +5,7 @@ AllCops:
   TargetRubyVersion: 2.3
 
 Metrics/MethodLength:   
-  Max: 30
+  Max: 40
 
 Metrics/LineLength:
   Max: 120
@@ -45,4 +45,10 @@ Metrics/PerceivedComplexity:
   Enabled: false
 
 Style/RaiseArgs:
+  Enabled: false
+
+Rails/Exit:
+  Enabled: false
+
+Style/GuardClause:
   Enabled: false
