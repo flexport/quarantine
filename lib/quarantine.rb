@@ -43,11 +43,11 @@ class Quarantine
     begin
       quarantine_list = database.scan(RSpec.configuration.quarantine_list_table)
     rescue Quarantine::DatabaseError => e
-      summary[:dynamodb_failures] << "#{e.cause.class}: #{e.cause.message}"
+      summary[:dynamodb_failures] << "#{e&.cause&.class}: #{e&.cause&.message}"
       raise Quarantine::DatabaseError.new(
         <<~ERROR_MSG
           Failed to pull the quarantine list from #{RSpec.configuration.quarantine_list_table}
-          because of #{e.cause.class}: #{e.cause.message}
+          because of #{e&.cause&.class}: #{e&.cause&.message}
         ERROR_MSG
       )
     end
@@ -103,7 +103,7 @@ class Quarantine
         )
       end
     rescue Quarantine::DatabaseError => e
-      summary[:dynamodb_failures] << "#{e.cause.class}: #{e.cause.message}"
+      summary[:dynamodb_failures] << "#{e&.cause&.class}: #{e&.cause&.message}"
     end
   end
 

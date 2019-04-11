@@ -4,7 +4,6 @@ describe Quarantine::Test do
   context '#initialize' do
     it 'all instance variables to argument values' do
       test = Quarantine::Test.new('id', 'full_description', 'location', 'build_number')
-
       expect(test.id).to eq('id')
       expect(test.full_description).to eq('full_description')
       expect(test.location).to eq('location')

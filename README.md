@@ -14,11 +14,11 @@ The purpose of `quarantine` is to provide a run-time solution to disabling flaky
 
 1. Create tables in your database required for the gem the upload and pull quarantined test info
 ```
-bundle exec quarantine_dynamodb -h            # see all options
+bundle exec quarantine_dynamodb -h                      # see all options
 
-bundle exec quarantine_dynamodb -r us-west-1  # create the tables in us-west-1 in aws dynamodb
-                                              # with default table names "quarantine_list" and
-                                              # and "master_failed_tests"
+bundle exec quarantine_dynamodb --aws_region us-west-1  # create the tables in us-west-1 in aws dynamodb
+                                                        # with default table names "quarantine_list" and
+                                                        # and "master_failed_tests"
 ```
 
 2. In your `spec_helper.rb` include the quarantine and rspec-retry gem

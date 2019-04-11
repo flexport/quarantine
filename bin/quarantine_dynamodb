@@ -3,103 +3,77 @@
 require 'aws-sdk'
 require 'optparse'
 
-# Default options
-options = {
-  quarantine_list_table_name: 'quarantine_list',
-  failed_test_table_name: 'master_failed_tests'
-}
+require_relative '../lib/quarantine/cli'
 
-OptionParser.new do |parser|
-  parser.banner = 'Usage: quarantine_dynamodb [options]'
+begin
+  cli = Quarantine::CLI.new
+  cli.parse
+  cli.create_tables
+rescue => e
+  STDERR.puts "#{e.class}: #{e.message}"
+  STDERR.puts e.backtrace.join("\n")
+  exit 1
+end
+exit
 
-  parser.on('-rREGION', '--region=REGION', String, 'Specify the aws region for DynamoDB') do |region|
-    options[:region] = region
-  end
+# dynamodb = Aws::DynamoDB::Client.new({ region: options[:region] })
 
-  parser.on(
-    '-qTABLE',
-    '--quarantine_table=TABLE',
-    String,
-    "Specify the table name for the quarantine list | Default: #{options[:quarantine_list_table_name]}"
-  ) do |table_name|
-    options[:quarantine_list_table_name] = table_name
-  end
+# dynamodb.create_table(
+#   {
+#     table_name: options[:quarantine_list_table_name],
+#     attribute_definitions: [
+#       {
+#         attribute_name: 'id',
+#         attribute_type: 'S'
+#       },
+#       {
+#         attribute_name: 'build_number',
+#         attribute_type: 'S'
+#       }
+#     ],
+#     key_schema: [
+#       {
+#         attribute_name: 'id',
+#         key_type: 'HASH'
+#       },
+#       {
+#         attribute_name: 'build_number',
+#         key_type: 'RANGE'
+#       }
+#     ],
+#     provisioned_throughput: {
+#       read_capacity_units: 5,
+#       write_capacity_units: 5
+#     }
+#   }
+# )
 
-  parser.on(
-    '-fTABLE',
-    '--failed_table=TABLE',
-    String,
-    "Specify the table name for the failed test list | Default: #{options[:failed_test_table_name]}"
-  ) do |table_name|
-    options[:failed_test_table_name] = table_name
-  end
-
-  parser.on('-h', '--help', 'Prints help page') do
-    puts parser
-    exit
-  end
-end.parse!
-
-warn 'Failed to specify the required aws region with -r option' if options[:region].nil?
-
-dynamodb = Aws::DynamoDB::Client.new({ region: options[:region] })
-
-dynamodb.create_table(
-  {
-    table_name: options[:quarantine_list_table_name],
-    attribute_definitions: [
-      {
-        attribute_name: 'id',
-        attribute_type: 'S'
-      },
-      {
-        attribute_name: 'build_number',
-        attribute_type: 'S'
-      }
-    ],
-    key_schema: [
-      {
-        attribute_name: 'id',
-        key_type: 'HASH'
-      },
-      {
-        attribute_name: 'build_number',
-        key_type: 'RANGE'
-      }
-    ],
-    provisioned_throughput: {
-      read_capacity_units: 5,
-      write_capacity_units: 5
-    }
-  }
-)
-
-dynamodb.create_table(
-  {
-    table_name: options[:failed_test_table_name],
-    attribute_definitions: [
-      {
-        attribute_name: 'id',
-        attribute_type: 'S'
-      },
-      {
-        attribute_name: 'build_number',
-        attribute_type: 'S'
-      }
-    ],
-    key_schema: [
-      {
-        attribute_name: 'id',
-        key_type: 'HASH'
-      },
-      {
-        attribute_name: 'build_number',
-        key_type: 'RANGE'
-      }
-    ],
-    provisioned_throughput: {
-      read_capacity_units: 5,
-      write_capacity_units: 5
-    }
-  }
-)
+# dynamodb.create_table(
+#   {
+#     table_name: options[:failed_test_table_name],
+#     attribute_definitions: [
+#       {
+#         attribute_name: 'id',
+#         attribute_type: 'S'
+#       },
+#       {
+#         attribute_name: 'build_number',
+#         attribute_type: 'S'
+#       }
+#     ],
+#     key_schema: [
+#       {
+#         attribute_name: 'id',
+#         key_type: 'HASH'
+#       },
+#       {
+#         attribute_name: 'build_number',
+#         key_type: 'RANGE'
+#       }
+#     ],
+#     provisioned_throughput: {
+#       read_capacity_units: 5,
+#       write_capacity_units: 5
+#     }
+#   }
+# )
