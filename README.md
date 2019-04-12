@@ -1,4 +1,5 @@
 # Quarantine
+[![Build Status](https://travis-ci.com/flexport/quarantine.svg?branch=master)](https://travis-ci.com/flexport/quarantine)
 
 Quarantine provides a run-time solution to diagnosing and disabling flaky tests and automates the workflow around test suite maintenance.
 
