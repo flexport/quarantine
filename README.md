@@ -1,6 +1,6 @@
 # Quarantine
 
-Quarantine provide a run-time solution to diagnosing and disabling flaky tests and automates the workflow around test suite maintainence.
+Quarantine provides a run-time solution to diagnosing and disabling flaky tests and automates the workflow around test suite maintenance.
 
 The quarantine gem supports testing frameworks:
 - [RSpec](http://rspec.info/)
@@ -11,7 +11,7 @@ The quarantine gem supports CI pipelines:
 If you are interested in using quarantine but it does not support your CI or testing framework, feel free to reach out or create an issue and we can try to make it happen.
 
 ## Purpose
-Flaky tests impact engineering velocity, reduce faith in test reliablity and give a false representation of code coverage. Manging flaky tests is a clunky process that involves constant build monitorization, difficult diagnosis and manual ticket creation. As a result, here at Flexport, we have created a Gem to automate the entire process to help improve the workflow and keep our massive test suites in prestine condition.
+Flaky tests impact engineering velocity, reduce faith in test reliablity and give a false representation of code coverage. Managing flaky tests is a clunky process that involves constant build monitorization, difficult diagnosis and manual ticket creation. As a result, here at Flexport, we have created a Gem to automate the entire process to help improve the workflow and keep our massive test suites in pristine condition.
 
 The workflow at Flexport involves:
 
@@ -32,9 +32,6 @@ And then execute:
 ```
 bundle install
 ```
-(might wanna move this to a later step)
-Create tables in your database required for the gem the upload and pull quarantined test info
-
 
 In your `spec_helper.rb` setup quarantine and rspec-retry gem. Click [rspec-retry](https://github.com/NoRedInk/rspec-retry) to get a more detailed explaination on rspec-retry configurations and how to setup.
 ```
@@ -72,7 +69,7 @@ bundle exec quarantine_dynamodb \     # create the tables in us-west-1 in aws dy
 You are all set to start quarantining tests!
 
 ## Try Quarantining Tests Locally
-Add a test that will flake consistently
+Add a test that will flake
 ```
 require "spec_helper"
 

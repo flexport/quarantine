@@ -52,3 +52,6 @@ Rails/Exit:
 
 Style/GuardClause:
   Enabled: false
+
+Lint/HandleExceptions:
+  Enabled: false
