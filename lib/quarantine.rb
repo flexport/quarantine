@@ -78,7 +78,7 @@ class Quarantine
     return unless tests.length < 10 && tests.length > 0
 
     begin
-      timestamp = Time.now.to_i / 1000
+      timestamp = Time.now.to_i / 1000 # Truncated millisecond from timestamp for reasons specific to Flexport
       database.batch_write_item(
         table_name,
         tests,
@@ -115,7 +115,7 @@ class Quarantine
     )
 
     flaky_tests << flaky_test
-    add_to_summary(:flaky_tests, flaky_test)
+    add_to_summary(:flaky_tests, flaky_test.id)
   end
 
   # Param: RSpec::Core::Example
