@@ -55,3 +55,6 @@ Style/GuardClause:
 
 Lint/HandleExceptions:
   Enabled: false
+
+Gemspec/RequiredRubyVersion:
+  Enabled: false
