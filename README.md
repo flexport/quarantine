@@ -22,7 +22,7 @@ The workflow at Flexport involves:
 ## Installation and Setup
 
 Add these lines to your application's Gemfile:
-```
+```rb
 group :test do
   gem 'quarantine'
   gem 'rspec-retry
@@ -30,12 +30,12 @@ end
 ```
 
 And then execute:
-```
+```sh
 bundle install
 ```
 
 In your `spec_helper.rb` setup quarantine and rspec-retry gem. Click [rspec-retry](https://github.com/NoRedInk/rspec-retry) to get a more detailed explaination on rspec-retry configurations and how to setup.
-```
+```rb
 require 'quarantine'
 require 'rspec-retry'
 
@@ -52,14 +52,14 @@ end
 
 Consider wrapping `Quarantine.bind` in if statements so local flaky tests don't pollute the list of quarantined tests
 
-```
+```rb
 if ENV[CI] && ENV[BRANCH] == "master"
   Quarantine.bind({database: :dynamodb, aws_region: 'us-west-1'})
 end
 ```
 
 Setup tables in AWS DynamoDB to support pulling and uploading quarantined tests
-```
+```sh
 bundle exec quarantine_dynamodb -h    # see all options
 
 bundle exec quarantine_dynamodb \     # create the tables in us-west-1 in aws dynamodb
@@ -71,7 +71,7 @@ You are all set to start quarantining tests!
 
 ## Try Quarantining Tests Locally
 Add a test that will flake
-```
+```rb
 require "spec_helper"
 
 describe Quarantine do
@@ -82,7 +82,7 @@ end
 ```
 
 Run `rspec` on the test
-```
+```sh
 CI=1 BRANCH=master rspec <filename>
 ```
 
@@ -91,7 +91,7 @@ If the test fails and passes on the test run (rspec-retry re-ran the test), the 
 ## Configuration
 
 Go to `spec/spec_helper.rb` and set configuration variables through:
-```
+```rb
 RSpec.configure do |config|
     config.VAR_NAME = VALUE
 end
@@ -134,7 +134,7 @@ To automatically unquarantine tests on Jira ticket completion, take a look at: `
 
 The `quarantine` gem may be configured to only run on certain environments. Make sure you pass all these `ENV` variables to `rspec` when you call it locally
 
-```
+```sh
 CI="1" BRANCH="master" rspec
 ```
 
