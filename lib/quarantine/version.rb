@@ -1,3 +1,3 @@
 class Quarantine
-  VERSION = '0.0.7'.freeze
+  VERSION = '1.0.0'.freeze
 end
