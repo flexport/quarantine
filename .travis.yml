@@ -6,7 +6,8 @@ rvm:
   - 2.5
   - 2.6
 install:
-  - bundle update --bundler
+  - rm -f Gemfile.lock
+  - gem install bundler
   - bundle install
 script:
   - bundle exec rspec
