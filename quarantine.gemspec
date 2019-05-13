@@ -18,7 +18,7 @@ Gem::Specification.new do |s|
   s.executables = ['quarantine_dynamodb']
   s.required_ruby_version = '>= 2.0'
 
-  s.add_dependency('aws-sdk', '~> 2.11')
+  s.add_dependency('aws-sdk', '>= 2.11')
   s.add_dependency('rspec', '~> 3.0')
   s.add_dependency('rspec-retry', '~> 0.6')
 end
