@@ -1,4 +1,3 @@
-require 'aws-sdk'
 require 'rspec/retry'
 require 'quarantine/rspec_adapter'
 require 'quarantine/test'

@@ -1,4 +1,4 @@
-require 'aws-sdk'
+require 'aws-sdk-dynamodb'
 require 'quarantine/databases/base'
 require 'quarantine/error'
 
