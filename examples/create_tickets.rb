@@ -13,7 +13,7 @@
 require 'jira-ruby'
 
 # AWS client to access quarantine list
-require 'aws-sdk'
+require 'aws-sdk-dynamodb'
 
 dynamodb = Aws::DynamoDB::Client.new({ region: 'us-west-1' })
 jira_client = JIRA::Client.new(JIRA_OPTIONS)
