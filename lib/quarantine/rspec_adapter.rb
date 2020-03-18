@@ -57,11 +57,13 @@ module RSpecAdapter
           !quarantine.test_quarantined?(example) &&
           metadata[:retry_attempts] + 1 == metadata[:retry] && example.exception
 
-        # will record the flaky test if is not quarantined and it failed the first run but passed a subsequent run
+        # will record the flaky test if is not quarantined and it failed the first run but passed a subsequent run;
+        # optionally, the upstream RSpec configuration could define an after hook that marks an example as flaky in
+        # the example's metadata
         quarantine.record_flaky_test(example) if
           RSpec.configuration.quarantine_record_flaky_tests &&
           !quarantine.test_quarantined?(example) &&
-          metadata[:retry_attempts] > 0 && example.exception.nil?
+          (metadata[:retry_attempts] > 0 && example.exception.nil?) || metadata[:flaky]
       end
     end
 
