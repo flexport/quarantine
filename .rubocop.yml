@@ -53,7 +53,7 @@ Rails/Exit:
 Style/GuardClause:
   Enabled: false
 
-Lint/HandleExceptions:
+Lint/SuppressedException:
   Enabled: false
 
 Gemspec/RequiredRubyVersion:
