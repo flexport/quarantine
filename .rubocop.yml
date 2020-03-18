@@ -1,5 +1,4 @@
-Rails:
-  Enabled: true
+require: rubocop-rails
 
 AllCops:
   TargetRubyVersion: 2.3
@@ -53,7 +52,7 @@ Rails/Exit:
 Style/GuardClause:
   Enabled: false
 
-Lint/SuppressedException:
+Lint/HandleExceptions:
   Enabled: false
 
 Gemspec/RequiredRubyVersion:
