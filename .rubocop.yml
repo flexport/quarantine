@@ -1,22 +1,21 @@
-Rails:
-  Enabled: true
+require: rubocop-rails
 
 AllCops:
-  TargetRubyVersion: 2.3
+  TargetRubyVersion: 2.5
 
 Metrics/MethodLength:   
   Max: 40
 
-Metrics/LineLength:
+Layout/LineLength:
   Max: 120
 
 Metrics/ClassLength:
   Enabled: false
 
-Style/BracesAroundHashParameters:
-  EnforcedStyle: braces
-  Exclude:
-    - 'Gemfile'
+# Style/BracesAroundHashParameters:
+#   EnforcedStyle: braces
+#   Exclude:
+#     - 'Gemfile'
 
 Metrics/BlockLength:
   Max: 40
@@ -53,7 +52,7 @@ Rails/Exit:
 Style/GuardClause:
   Enabled: false
 
-Lint/HandleExceptions:
+Lint/SuppressedException:
   Enabled: false
 
 Gemspec/RequiredRubyVersion:
