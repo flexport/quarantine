@@ -12,11 +12,6 @@ Layout/LineLength:
 Metrics/ClassLength:
   Enabled: false
 
-# Style/BracesAroundHashParameters:
-#   EnforcedStyle: braces
-#   Exclude:
-#     - 'Gemfile'
-
 Metrics/BlockLength:
   Max: 40
   Exclude:
