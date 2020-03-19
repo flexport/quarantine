@@ -1,3 +1,6 @@
+### 1.0.4
+  Enable upstream callers to mark an example as flaky through the example's metadata
+
 ### 1.0.3
   Only require dynamodb instead of full aws-sdk
 
