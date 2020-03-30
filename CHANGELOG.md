@@ -1,3 +1,6 @@
+### 1.0.5
+  Add aws_credentials argument during dynamodb initialization to override the AWS SDK credential chain
+
 ### 1.0.4
   Enable upstream callers to mark an example as flaky through the example's metadata
 
