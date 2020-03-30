@@ -15,6 +15,15 @@ describe Quarantine::Databases::DynamoDB do
       expect(database.dynamodb).to be_a(Aws::DynamoDB::Client)
       expect(database.dynamodb.config.region).to eq('us-east-2')
     end
+
+    it 'aws credentials to fake credentials' do
+      fake_creds = Aws::Credentials.new('fake', 'creds')
+      database = Quarantine::Databases::DynamoDB.new({ aws_credentials: fake_creds })
+
+      expect(database.dynamodb).to be_a(Aws::DynamoDB::Client)
+      expect(database.dynamodb.config.region).to eq('us-west-1')
+      expect(database.dynamodb.config.credentials).to eq(fake_creds)
+    end
   end
 
   context '#scan' do

@@ -2,4 +2,5 @@
 *.swx
 .DS_Store
 .bundle
+.idea
 Gemfile.lock

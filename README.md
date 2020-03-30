@@ -39,7 +39,7 @@ In your `spec_helper.rb` setup quarantine and rspec-retry gem. Click [rspec-retr
 require 'quarantine'
 require 'rspec-retry'
 
-Quarantine.bind({database: :dynamodb, aws_region: 'us-west-1'})
+Quarantine.bind({database: :dynamodb, aws_region: 'us-west-1'}) # Also accepts aws_credentials to override the standard AWS credential chain
 
 RSpec.configure do |config|
 
@@ -140,7 +140,8 @@ CI="1" BRANCH="master" rspec
 
 #### Why is dynamodb failing to connect?
 
-The AWS client loads credentials from the following locations:
+The AWS client loads credentials from the following locations (in order of precedence):
+- The optional `aws_credentials` parameter passed into `Quarantine.bind`
 - `ENV['AWS_ACCESS_KEY_ID']` and `ENV['AWS_SECRET_ACCESS_KEY']`
 - `Aws.config[:credentials]`
 - The shared credentials ini file at `~/.aws/credentials`
