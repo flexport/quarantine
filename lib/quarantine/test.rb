@@ -23,10 +23,10 @@ class Quarantine
 
     def to_string_hash
       {
-        "id" => id,
-        "full_description" => full_description,
-        "location" => location,
-        "build_number" => build_number
+        'id' => id,
+        'full_description' => full_description,
+        'location' => location,
+        'build_number' => build_number
       }
     end
   end

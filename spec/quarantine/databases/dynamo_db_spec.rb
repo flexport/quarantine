@@ -3,14 +3,14 @@ require 'spec_helper'
 describe Quarantine::Databases::DynamoDB do
   context '#initialize' do
     it ' all instance variables to the default value' do
-      database = Quarantine::Databases::DynamoDB.new({ additional_arg: 'foo' })
+      database = Quarantine::Databases::DynamoDB.new(additional_arg: 'foo')
 
       expect(database.dynamodb).to be_a(Aws::DynamoDB::Client)
       expect(database.dynamodb.config.region).to eq('us-west-1')
     end
 
     it 'aws region to us-east-2' do
-      database = Quarantine::Databases::DynamoDB.new({ aws_region: 'us-east-2' })
+      database = Quarantine::Databases::DynamoDB.new(aws_region: 'us-east-2')
 
       expect(database.dynamodb).to be_a(Aws::DynamoDB::Client)
       expect(database.dynamodb.config.region).to eq('us-east-2')
@@ -18,7 +18,7 @@ describe Quarantine::Databases::DynamoDB do
 
     it 'aws credentials to fake credentials' do
       fake_creds = Aws::Credentials.new('fake', 'creds')
-      database = Quarantine::Databases::DynamoDB.new({ aws_credentials: fake_creds })
+      database = Quarantine::Databases::DynamoDB.new(aws_credentials: fake_creds)
 
       expect(database.dynamodb).to be_a(Aws::DynamoDB::Client)
       expect(database.dynamodb.config.region).to eq('us-west-1')
@@ -41,8 +41,8 @@ describe Quarantine::Databases::DynamoDB do
       'build_number' => '-1'
     }
 
-    let(:dynamodb) { Aws::DynamoDB::Client.new({ stub_responses: true }) }
-    let(:stub_multiple_tests) { dynamodb.stub_data(:scan, { items: [test1, test2] }) }
+    let(:dynamodb) { Aws::DynamoDB::Client.new(stub_responses: true) }
+    let(:stub_multiple_tests) { dynamodb.stub_data(:scan, items: [test1, test2]) }
     let(:database) { Quarantine::Databases::DynamoDB.new }
 
     before(:each) do
@@ -50,7 +50,7 @@ describe Quarantine::Databases::DynamoDB do
     end
 
     it 'is called with the correct table name' do
-      expect(database.dynamodb).to receive(:scan).with({ table_name: 'foo' }).once
+      expect(database.dynamodb).to receive(:scan).with(table_name: 'foo').once
       database.scan('foo')
     end
 
@@ -84,28 +84,28 @@ describe Quarantine::Databases::DynamoDB do
     let(:database) { Quarantine::Databases::DynamoDB.new }
     let(:items) { [item1, item2] }
     let(:additional_attributes) { { a: 'a', b: 'b' } }
-    let(:dedup_keys) { ["id", "location", "full_description"] }
+    let(:dedup_keys) { %w[id location full_description] }
 
     it 'has arguments splatted correctly' do
       result = {
         request_items: {
           'foo' => [
-            { 
-              put_request: { 
+            {
+              put_request: {
                 item: {
                   **item1.to_hash,
-                  **additional_attributes,
-                } 
-              },
-            },
-            { 
-              put_request: { 
-                item: {
-                  **item2.to_hash,
-                  **additional_attributes,
-                } 
+                  **additional_attributes
+                }
               }
             },
+            {
+              put_request: {
+                item: {
+                  **item2.to_hash,
+                  **additional_attributes
+                }
+              }
+            }
           ]
         }
       }
@@ -122,17 +122,17 @@ describe Quarantine::Databases::DynamoDB do
           'foo' => [
             { put_request: { item: {
                   **item1.to_hash,
-                  **additional_attributes,
-                }  } },
+                  **additional_attributes
+            } } }
           ]
         }
       }
 
       scanned_hash = item2.to_string_hash
-      scanned_hash["build_number"] = rand(10).to_s
+      scanned_hash['build_number'] = rand(10).to_s
       allow(database).to receive(:scan).and_return([
-        scanned_hash
-      ])
+                                                     scanned_hash
+                                                   ])
 
       expect(database.dynamodb).to receive(:batch_write_item).with(result).once
 
@@ -141,7 +141,7 @@ describe Quarantine::Databases::DynamoDB do
 
     it 'throws exception Quarantine::DatabaseError on AWS errors' do
       items = [
-        Quarantine::Test.new("some_id", "some description", "some location", "some build_number")
+        Quarantine::Test.new('some_id', 'some description', 'some location', 'some build_number')
       ]
       error = Aws::DynamoDB::Errors::LimitExceededException.new(Quarantine, 'limit exceeded')
       allow(database.dynamodb).to receive(:scan).and_raise(error)
@@ -159,13 +159,13 @@ describe Quarantine::Databases::DynamoDB do
       }
       expect(database.dynamodb).to receive(:delete_item).with(result)
 
-      database.delete_item('foo', { id: '1', build_number: '123' })
+      database.delete_item('foo', id: '1', build_number: '123')
     end
 
     it 'throws exception Quarantine::DatabaseError on AWS errors' do
       error = Aws::DynamoDB::Errors::IndexNotFoundException.new(Quarantine, 'index not found')
       allow(database.dynamodb).to receive(:delete_item).and_raise(error)
-      expect { database.delete_item('foo', { id: '1' }) }.to raise_error(Quarantine::DatabaseError)
+      expect { database.delete_item('foo', id: '1') }.to raise_error(Quarantine::DatabaseError)
     end
   end
 
@@ -184,19 +184,17 @@ describe Quarantine::Databases::DynamoDB do
       }
 
       expect(database.dynamodb).to receive(:create_table).with(
-        {
-          table_name: 'foo',
-          attribute_definitions: [
-            { attribute_name: 'a1', attribute_type: 'S' },
-            { attribute_name: 'a2', attribute_type: 'S' }
-          ],
-          key_schema: [
-            { attribute_name: 'a1', key_type: 'HASH' },
-            { attribute_name: 'a2', key_type: 'RANGE' }
-          ],
-          a3: { a4: 'a4', a5: 'a5' },
-          a6: 'a6'
-        }
+        table_name: 'foo',
+        attribute_definitions: [
+          { attribute_name: 'a1', attribute_type: 'S' },
+          { attribute_name: 'a2', attribute_type: 'S' }
+        ],
+        key_schema: [
+          { attribute_name: 'a1', key_type: 'HASH' },
+          { attribute_name: 'a2', key_type: 'RANGE' }
+        ],
+        a3: { a4: 'a4', a5: 'a5' },
+        a6: 'a6'
       )
 
       database.create_table('foo', attributes, additional_arguments)
