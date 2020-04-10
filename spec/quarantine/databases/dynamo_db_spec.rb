@@ -78,33 +78,74 @@ describe Quarantine::Databases::DynamoDB do
   end
 
   context '#batch_write_item' do
-    item1 = { x: 'foo', y: 'bar' }
-
-    item2 = { x: 'foo2', y: 'bar2' }
+    item1 = Quarantine::Test.new('1', 'quarantined_test_1', 'line 1', '123')
+    item2 = Quarantine::Test.new('2', 'quarantined_test_2', 'line 2', '-1')
 
     let(:database) { Quarantine::Databases::DynamoDB.new }
     let(:items) { [item1, item2] }
     let(:additional_attributes) { { a: 'a', b: 'b' } }
+    let(:dedup_keys) { ["id", "location", "full_description"] }
 
     it 'has arguments splatted correctly' do
       result = {
         request_items: {
           'foo' => [
-            { put_request: { item: { x: 'foo', y: 'bar', a: 'a', b: 'b' } } },
-            { put_request: { item: { x: 'foo2', y: 'bar2', a: 'a', b: 'b' } } }
+            { 
+              put_request: { 
+                item: {
+                  **item1.to_hash,
+                  **additional_attributes,
+                } 
+              },
+            },
+            { 
+              put_request: { 
+                item: {
+                  **item2.to_hash,
+                  **additional_attributes,
+                } 
+              }
+            },
           ]
         }
       }
 
+      allow(database).to receive(:scan).and_return([])
       expect(database.dynamodb).to receive(:batch_write_item).with(result).once
 
       database.batch_write_item('foo', items, additional_attributes)
     end
 
+    it "doesn't upload existing quarantined tests" do
+      result = {
+        request_items: {
+          'foo' => [
+            { put_request: { item: {
+                  **item1.to_hash,
+                  **additional_attributes,
+                }  } },
+          ]
+        }
+      }
+
+      scanned_hash = item2.to_string_hash
+      scanned_hash["build_number"] = rand(10).to_s
+      allow(database).to receive(:scan).and_return([
+        scanned_hash
+      ])
+
+      expect(database.dynamodb).to receive(:batch_write_item).with(result).once
+
+      database.batch_write_item('foo', items, additional_attributes, dedup_keys)
+    end
+
     it 'throws exception Quarantine::DatabaseError on AWS errors' do
+      items = [
+        Quarantine::Test.new("some_id", "some description", "some location", "some build_number")
+      ]
       error = Aws::DynamoDB::Errors::LimitExceededException.new(Quarantine, 'limit exceeded')
-      allow(database.dynamodb).to receive(:batch_write_item).and_raise(error)
-      expect { database.batch_write_item('foo', []) }.to raise_error(Quarantine::DatabaseError)
+      allow(database.dynamodb).to receive(:scan).and_raise(error)
+      expect { database.batch_write_item('foo', items) }.to raise_error(Quarantine::DatabaseError)
     end
   end
 
