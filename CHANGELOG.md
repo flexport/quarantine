@@ -1,3 +1,6 @@
+### 1.0.6
+  Update DynamoDB batch_write_item implementation to check for duplicates based on different keys before uploading
+
 ### 1.0.5
   Add aws_credentials argument during dynamodb initialization to override the AWS SDK credential chain
 
