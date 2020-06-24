@@ -1,5 +1,6 @@
 require 'quarantine'
 require 'rspec/retry'
+require_relative 'support/environment_helper'
 
 RSpec.configure do |config|
   config.add_setting(:quarantine_list_table, { default: 'quarantine_list' })
@@ -9,4 +10,5 @@ RSpec.configure do |config|
   config.add_setting(:quarantine_record_flaky_tests, { default: true })
   config.add_setting(:remove_duplicate_tests, { default: true })
   config.add_setting(:quarantine_logging, { default: true })
+  config.include EnvironmentHelper
 end

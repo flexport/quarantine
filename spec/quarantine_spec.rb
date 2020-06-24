@@ -107,7 +107,35 @@ describe Quarantine do
       expect(quarantine.failed_tests[0].id).to eq(example.id)
       expect(quarantine.failed_tests[0].full_description).to eq(example.full_description)
       expect(quarantine.failed_tests[0].location).to eq(example.location)
-      expect(quarantine.failed_tests[0].build_number).to eq(quarantine.buildkite_build_number)
+      expect(quarantine.failed_tests[0].build_number).to eq(quarantine.ci_build_number)
+    end
+
+    context 'when BUILDKITE_BUILD_NUMBER is defined' do
+      it 'assigns its value to build_number' do |example|
+        with_environment(BUILDKITE_BUILD_NUMBER: '1234') do
+          quarantine.record_failed_test(example)
+
+          expect(quarantine.failed_tests[0].build_number).to eq('1234')
+        end
+      end
+    end
+
+    context 'when BUILD_NUMBER is defined' do
+      it 'assigns its value to build_number' do |example|
+        with_environment(BUILD_NUMBER: '9876') do
+          quarantine.record_failed_test(example)
+
+          expect(quarantine.failed_tests[0].build_number).to eq('9876')
+        end
+      end
+    end
+
+    context 'when neither BUILDKITE_JOB_ID nor BUILD_NUMBER are defined' do
+      it 'assigns -1 to build_number' do |example|
+        quarantine.record_failed_test(example)
+
+        expect(quarantine.failed_tests[0].build_number).to eq('-1')
+      end
     end
   end
 
@@ -121,7 +149,35 @@ describe Quarantine do
       expect(quarantine.flaky_tests[0].id).to eq(example.id)
       expect(quarantine.flaky_tests[0].full_description).to eq(example.full_description)
       expect(quarantine.flaky_tests[0].location).to eq(example.location)
-      expect(quarantine.flaky_tests[0].build_number).to eq(quarantine.buildkite_build_number)
+      expect(quarantine.flaky_tests[0].build_number).to eq(quarantine.ci_build_number)
+    end
+
+    context 'when BUILDKITE_BUILD_NUMBER is defined' do
+      it 'assigns its value to build_number' do |example|
+        with_environment(BUILDKITE_BUILD_NUMBER: '1234') do
+          quarantine.record_flaky_test(example)
+
+          expect(quarantine.flaky_tests[0].build_number).to eq('1234')
+        end
+      end
+    end
+
+    context 'when BUILD_NUMBER is defined' do
+      it 'assigns its value to build_number' do |example|
+        with_environment(BUILD_NUMBER: '9876') do
+          quarantine.record_flaky_test(example)
+
+          expect(quarantine.flaky_tests[0].build_number).to eq('9876')
+        end
+      end
+    end
+
+    context 'when neither BUILDKITE_JOB_ID nor BUILD_NUMBER are defined' do
+      it 'assigns -1 to build_number' do |example|
+        quarantine.record_flaky_test(example)
+
+        expect(quarantine.flaky_tests[0].build_number).to eq('-1')
+      end
     end
   end
 

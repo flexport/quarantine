@@ -12,7 +12,7 @@ class Quarantine
   attr_reader :failed_tests
   attr_reader :flaky_tests
   attr_reader :duplicate_tests
-  attr_reader :buildkite_build_number
+  attr_reader :ci_build_number
   attr_reader :summary
 
   def initialize(options = {})
@@ -27,7 +27,7 @@ class Quarantine
     @quarantine_map = {}
     @failed_tests = []
     @flaky_tests = []
-    @buildkite_build_number = ENV['BUILDKITE_BUILD_NUMBER'] || '-1'
+    @ci_build_number = ENV['BUILDKITE_BUILD_NUMBER'] || ENV['BUILD_NUMBER'] || '-1'
     @summary = { id: 'quarantine', quarantined_tests: [], flaky_tests: [], database_failures: [] }
   end
 
@@ -82,7 +82,7 @@ class Quarantine
         table_name,
         tests,
         {
-          build_job_id: ENV['BUILDKITE_JOB_ID'] || '-1',
+          build_job_id: ENV['BUILDKITE_JOB_ID'] || ENV['JOB_NAME'] || '-1',
           created_at: timestamp,
           updated_at: timestamp
         }
@@ -99,7 +99,7 @@ class Quarantine
       example.id,
       example.full_description,
       example.location,
-      buildkite_build_number
+      ci_build_number
     )
   end
 
@@ -110,7 +110,7 @@ class Quarantine
       example.id,
       example.full_description,
       example.location,
-      buildkite_build_number
+      ci_build_number
     )
 
     flaky_tests << flaky_test
