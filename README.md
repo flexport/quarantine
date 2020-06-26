@@ -8,6 +8,7 @@ The quarantine gem supports testing frameworks:
 
 The quarantine gem supports CI pipelines:
 - [Buildkite](https://buildkite.com/docs/tutorials/getting-started)
+- [Jenkins](https://www.jenkins.io/)
 
 If you are interested in using quarantine but it does not support your CI or testing framework, feel free to reach out or create an issue and we can try to make it happen.
 
