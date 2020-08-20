@@ -25,7 +25,7 @@ Add these lines to your application's Gemfile:
 ```rb
 group :test do
   gem 'quarantine'
-  gem 'rspec-retry
+  gem 'rspec-retry'
 end
 ```
 
