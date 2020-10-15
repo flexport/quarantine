@@ -25,7 +25,7 @@ Add these lines to your application's Gemfile:
 ```rb
 group :test do
   gem 'quarantine'
-  gem 'rspec-retry
+  gem 'rspec-retry'
 end
 ```
 
@@ -100,7 +100,7 @@ end
 
 - Table name where failed test are uploaded `:quarantine_failed_tests_table, default: "master_failed_tests"`
 
-- Quarantined tests are not skipped automatically `:skip_quarantined_tests, default: true`
+- Skipping quarantined tests during test runs `:skip_quarantined_tests, default: true`
 
 - Recording failed tests `:quarantine_record_failed_tests, default: true`
 
