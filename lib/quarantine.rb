@@ -4,6 +4,20 @@ require 'quarantine/test'
 require 'quarantine/databases/base'
 require 'quarantine/databases/dynamo_db'
 
+module RSpec
+  module Core
+    class Example
+      # The implementation of clear_exception in rspec-retry doesn't work
+      # for examples that use `it_behaves_like`, so we implement our own version that
+      # clear the exception field recursively.
+      def clear_exception!
+        @exception = nil
+        example.clear_exception! if defined?(example)
+      end
+    end
+  end
+end
+
 class Quarantine
   extend RSpecAdapter
 
@@ -119,11 +133,8 @@ class Quarantine
 
   # Param: RSpec::Core::Example
   # Clear exceptions on a flaky tests that has been quarantined
-  #
-  # example.clear_exception is tightly coupled with the rspec-retry gem and will only exist if
-  # the rspec-retry gem is enabled
   def pass_flaky_test(example)
-    example.clear_exception
+    example.clear_exception!
     add_to_summary(:quarantined_tests, example.id)
   end
 
