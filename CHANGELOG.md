@@ -1,3 +1,6 @@
+### 1.0.7
+  Support `it_behaves_like` behavior
+
 ### 1.0.6
   Update DynamoDB batch_write_item implementation to check for duplicates based on different keys before uploading
 
