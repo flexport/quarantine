@@ -18,8 +18,8 @@ class Quarantine
       OptionParser.new do |parser|
         parser.banner = 'Usage: quarantine_dynamodb [options]'
 
-        parser.on('-rREGION', '--aws_region=REGION', String, 'Specify the aws region for DynamoDB') do |aws_region|
-          options[:aws_region] = aws_region
+        parser.on('-rREGION', '--region=REGION', String, 'Specify the aws region for DynamoDB') do |region|
+          options[:region] = region
         end
 
         parser.on(
@@ -46,7 +46,7 @@ class Quarantine
         end
       end.parse!
 
-      if options[:aws_region].nil?
+      if options[:region].nil?
         error_msg = 'Failed to specify the required aws region with -r option'.freeze
         warn error_msg
         raise ArgumentError.new(error_msg)
@@ -55,7 +55,7 @@ class Quarantine
 
     # TODO: eventually move to a separate file & create_table by db type when my db adapters
     def create_tables
-      dynamodb = Quarantine::Databases::DynamoDB.new(options)
+      dynamodb = Quarantine::Databases::DynamoDB.new(region: options[:region])
 
       attributes = [
         { attribute_name: 'id', attribute_type: 'S', key_type: 'HASH' },

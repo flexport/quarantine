@@ -1,16 +1,13 @@
 require 'spec_helper'
 
 describe Quarantine do
-  context '#initialize' do
-    it 'all instance variables to the default value' do
-      quarantine = Quarantine.new
-
-      expect(quarantine.database).to be_a(Quarantine::Databases::DynamoDB)
-      expect(quarantine.quarantine_map).to eq({})
-      expect(quarantine.failed_tests).to eq([])
-      expect(quarantine.flaky_tests).to eq([])
-    end
+  before(:all) do
+    Quarantine.bind_rspec
   end
+
+  let(:options) { {
+    database: {type: :dynamodb, region: 'us-west-1'},
+  } }
 
   context '#fetch_quarantine_list' do
     test1 = {
@@ -34,7 +31,7 @@ describe Quarantine do
       'build_number' => '124'
     }
 
-    let(:quarantine) { Quarantine.new }
+    let(:quarantine) { Quarantine.new(options) }
     let(:dynamodb) { Aws::DynamoDB::Client.new({ stub_responses: true }) }
     let(:stub_multiple_tests) { dynamodb.stub_data(:scan, { items: [test1, test2] }) }
     let(:stub_duplicate_tests_replace) do
@@ -98,7 +95,7 @@ describe Quarantine do
   end
 
   context '#record_failed_test' do
-    let(:quarantine) { Quarantine.new }
+    let(:quarantine) { Quarantine.new(options) }
 
     it 'adds the failed test to the @failed_test array' do |example|
       quarantine.record_failed_test(example)
@@ -112,7 +109,7 @@ describe Quarantine do
   end
 
   context '#record_flaky_test' do
-    let(:quarantine) { Quarantine.new }
+    let(:quarantine) { Quarantine.new(options) }
 
     it 'adds the flaky test to the @flaky_test array' do |example|
       quarantine.record_flaky_test(example)
@@ -126,7 +123,7 @@ describe Quarantine do
   end
 
   context '#test_quarantined?' do
-    let(:quarantine) { Quarantine.new }
+    let(:quarantine) { Quarantine.new(options) }
 
     it 'returns true on quarantined test' do |example|
       quarantine.quarantine_map.store(
@@ -147,7 +144,7 @@ describe Quarantine do
   end
 
   context '#pass_flaky_test' do
-    let(:quarantine) { Quarantine.new }
+    let(:quarantine) { Quarantine.new(options) }
 
     it 'passes a failing test' do |example|
       example.set_exception(StandardError.new)

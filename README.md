@@ -39,9 +39,11 @@ In your `spec_helper.rb` setup quarantine and rspec-retry gem. Click [rspec-retr
 require 'quarantine'
 require 'rspec-retry'
 
-Quarantine.bind({database: :dynamodb, aws_region: 'us-west-1'}) # Also accepts aws_credentials to override the standard AWS credential chain
+Quarantine.bind_rspec
 
 RSpec.configure do |config|
+  # Also accepts `credentials` to override the standard AWS credential chain
+  config.quarantine_database = {type: :dynamodb, region: 'us-west-1'}
 
   config.around(:each) do |ex|
     ex.run_with_retry(retry: 3)
@@ -54,7 +56,7 @@ Consider wrapping `Quarantine.bind` in if statements so local flaky tests don't 
 
 ```rb
 if ENV[CI] && ENV[BRANCH] == "master"
-  Quarantine.bind({database: :dynamodb, aws_region: 'us-west-1'})
+  Quarantine.bind_rspec
 end
 ```
 
@@ -63,7 +65,7 @@ Setup tables in AWS DynamoDB to support pulling and uploading quarantined tests
 bundle exec quarantine_dynamodb -h    # see all options
 
 bundle exec quarantine_dynamodb \     # create the tables in us-west-1 in aws dynamodb
-  --aws_region us-west-1              # with "quarantine_list" and "master_failed_tests"
+  --region us-west-1                  # with "quarantine_list" and "master_failed_tests"
                                       # table names
 ```
 
@@ -141,7 +143,7 @@ CI="1" BRANCH="master" rspec
 #### Why is dynamodb failing to connect?
 
 The AWS client loads credentials from the following locations (in order of precedence):
-- The optional `aws_credentials` parameter passed into `Quarantine.bind`
+- The optional `credentials` field in `RSpec.configuration.quarantine_database`
 - `ENV['AWS_ACCESS_KEY_ID']` and `ENV['AWS_SECRET_ACCESS_KEY']`
 - `Aws.config[:credentials]`
 - The shared credentials ini file at `~/.aws/credentials`

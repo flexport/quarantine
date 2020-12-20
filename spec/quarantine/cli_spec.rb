@@ -24,7 +24,7 @@ describe Quarantine::CLI do
       ARGV << '-r' << 'us-west-1'
       cli.parse
 
-      expect(cli.options[:aws_region]).to eq('us-west-1')
+      expect(cli.options[:region]).to eq('us-west-1')
     end
 
     it 'define quarantined test table name' do
@@ -48,7 +48,7 @@ describe Quarantine::CLI do
     end
 
     context '#create_tables' do
-      let(:dynamodb) { Quarantine::Databases::DynamoDB.new }
+      let(:dynamodb) { Quarantine::Databases::DynamoDB.new(region: 'us-west-1') }
       let(:cli) { Quarantine::CLI.new }
 
       it 'called with the correct arguments' do

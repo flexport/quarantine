@@ -1,31 +1,6 @@
 require 'spec_helper'
 
 describe Quarantine::Databases::DynamoDB do
-  context '#initialize' do
-    it ' all instance variables to the default value' do
-      database = Quarantine::Databases::DynamoDB.new(additional_arg: 'foo')
-
-      expect(database.dynamodb).to be_a(Aws::DynamoDB::Client)
-      expect(database.dynamodb.config.region).to eq('us-west-1')
-    end
-
-    it 'aws region to us-east-2' do
-      database = Quarantine::Databases::DynamoDB.new(aws_region: 'us-east-2')
-
-      expect(database.dynamodb).to be_a(Aws::DynamoDB::Client)
-      expect(database.dynamodb.config.region).to eq('us-east-2')
-    end
-
-    it 'aws credentials to fake credentials' do
-      fake_creds = Aws::Credentials.new('fake', 'creds')
-      database = Quarantine::Databases::DynamoDB.new(aws_credentials: fake_creds)
-
-      expect(database.dynamodb).to be_a(Aws::DynamoDB::Client)
-      expect(database.dynamodb.config.region).to eq('us-west-1')
-      expect(database.dynamodb.config.credentials).to eq(fake_creds)
-    end
-  end
-
   context '#scan' do
     test1 = {
       'full_description' => 'quarantined_test_1',
@@ -43,7 +18,7 @@ describe Quarantine::Databases::DynamoDB do
 
     let(:dynamodb) { Aws::DynamoDB::Client.new(stub_responses: true) }
     let(:stub_multiple_tests) { dynamodb.stub_data(:scan, items: [test1, test2]) }
-    let(:database) { Quarantine::Databases::DynamoDB.new }
+    let(:database) { Quarantine::Databases::DynamoDB.new(region: 'us-west-1') }
 
     before(:each) do
       database.dynamodb = dynamodb
@@ -81,7 +56,7 @@ describe Quarantine::Databases::DynamoDB do
     item1 = Quarantine::Test.new('1', 'quarantined_test_1', 'line 1', '123')
     item2 = Quarantine::Test.new('2', 'quarantined_test_2', 'line 2', '-1')
 
-    let(:database) { Quarantine::Databases::DynamoDB.new }
+    let(:database) { Quarantine::Databases::DynamoDB.new(region: 'us-west-1') }
     let(:items) { [item1, item2] }
     let(:additional_attributes) { { a: 'a', b: 'b' } }
     let(:dedup_keys) { %w[id location full_description] }
@@ -150,7 +125,7 @@ describe Quarantine::Databases::DynamoDB do
   end
 
   context '#delete_item' do
-    let(:database) { Quarantine::Databases::DynamoDB.new }
+    let(:database) { Quarantine::Databases::DynamoDB.new(region: 'us-west-1') }
 
     it 'has arguments splatted correctly' do
       result = {
@@ -170,7 +145,7 @@ describe Quarantine::Databases::DynamoDB do
   end
 
   context '#create_table' do
-    let(:database) { Quarantine::Databases::DynamoDB.new }
+    let(:database) { Quarantine::Databases::DynamoDB.new(region: 'us-west-1') }
 
     it 'has arguments mapped and splatterd correctly' do
       attributes = [
