@@ -33,7 +33,7 @@ class JiraController < ApplicationController
           { table_name: 'quarantine_list',
             key: {
               id: quarantined_test['id'],
-              build_number: quarantined_test['build_number']
+              build_number: quarantined_test['extra_attributes']['build_number']
             } }
         )
       end

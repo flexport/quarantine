@@ -42,7 +42,7 @@ tests.each do |test|
                          table_name: 'quarantine_list',
                          key: {
                            id: test['id'],
-                           build_number: test['build_number']
+                           build_number: test['extra_attributes']['build_number']
                          },
                          update_expression: 'jira_key = :jira_key',
                          expression_attribute_values: {

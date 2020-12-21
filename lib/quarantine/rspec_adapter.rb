@@ -15,6 +15,7 @@ module Quarantine::RSpecAdapter
       database: RSpec.configuration.quarantine_database,
       list_table: RSpec.configuration.quarantine_list_table,
       failed_tests_table: RSpec.configuration.quarantine_failed_tests_table,
+      extra_attributes: RSpec.configuration.quarantine_extra_attributes,
     )
   end
 
@@ -30,6 +31,7 @@ module Quarantine::RSpecAdapter
       config.add_setting(:quarantine_record_failed_tests, { default: true })
       config.add_setting(:quarantine_record_flaky_tests, { default: true })
       config.add_setting(:quarantine_logging, { default: true })
+      config.add_setting(:quarantine_extra_attributes)
     end
   end
 

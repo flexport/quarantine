@@ -59,7 +59,6 @@ class Quarantine
 
       attributes = [
         { attribute_name: 'id', attribute_type: 'S', key_type: 'HASH' },
-        { attribute_name: 'build_number', attribute_type: 'S', key_type: 'RANGE' }
       ]
 
       additional_arguments = {

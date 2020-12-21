@@ -20,11 +20,10 @@ end
 
 class Quarantine
   attr_reader :options
-  attr_reader :quarantine_map
+  attr_reader :quarantined_ids
   attr_reader :failed_tests
   attr_reader :flaky_tests
   attr_reader :duplicate_tests
-  attr_reader :buildkite_build_number
   attr_reader :summary
 
   def self.bind_rspec
@@ -33,10 +32,9 @@ class Quarantine
 
   def initialize(options)
     @options = options
-    @quarantine_map = {}
+    @quarantined_ids = []
     @failed_tests = []
     @flaky_tests = []
-    @buildkite_build_number = ENV['BUILDKITE_BUILD_NUMBER'] || '-1'
     @summary = { id: 'quarantine', quarantined_tests: [], flaky_tests: [], database_failures: [] }
   end
 
@@ -51,7 +49,7 @@ class Quarantine
     end
   end
 
-  # Scans the quarantine_list from the database and store the individual tests in quarantine_map
+  # Scans the quarantine_list from the database and store their IDs in quarantined_ids
   def fetch_quarantine_list
     begin
       quarantine_list = database.scan(options[:list_table])
@@ -65,19 +63,7 @@ class Quarantine
       )
     end
 
-    quarantine_list.each do |example|
-      # on the rare occassion there are duplicate tests ids in the quarantine_list,
-      # quarantine the most recent instance of the test (det. through build_number)
-      # and ignore the older instance of the test
-      next if
-        quarantine_map.key?(example['id']) &&
-        example['build_number'].to_i < quarantine_map[example['id']].build_number.to_i
-
-      quarantine_map.store(
-        example['id'],
-        Quarantine::Test.new(example['id'], example['full_description'], example['location'], example['build_number'])
-      )
-    end
+    @quarantined_ids = quarantine_list.map{|q| q['id']}
   end
 
   # Based off the type, upload a list of tests to a particular database table
@@ -102,7 +88,6 @@ class Quarantine
         table_name,
         tests,
         {
-          build_job_id: ENV['BUILDKITE_JOB_ID'] || '-1',
           created_at: timestamp,
           updated_at: timestamp
         }
@@ -112,26 +97,25 @@ class Quarantine
     end
   end
 
+  def create_test(example)
+    extra_attributes = if options[:extra_attributes]
+      options[:extra_attributes].call(example)
+    else
+      {}
+    end
+    Quarantine::Test.new(example.id, example.full_description, example.location, extra_attributes)
+  end
+
   # Param: RSpec::Core::Example
   # Add the example to the internal failed tests list
   def record_failed_test(example)
-    failed_tests << Quarantine::Test.new(
-      example.id,
-      example.full_description,
-      example.location,
-      buildkite_build_number
-    )
+    failed_tests << create_test(example)
   end
 
   # Param: RSpec::Core::Example
   # Add the example to the internal flaky tests list
   def record_flaky_test(example)
-    flaky_test = Quarantine::Test.new(
-      example.id,
-      example.full_description,
-      example.location,
-      buildkite_build_number
-    )
+    flaky_test = create_test(example)
 
     flaky_tests << flaky_test
     add_to_summary(:flaky_tests, flaky_test.id)
@@ -145,9 +129,9 @@ class Quarantine
   end
 
   # Param: RSpec::Core::Example
-  # Check the internal quarantine_map to see if this test should be quarantined
+  # Check the internal quarantined_ids to see if this test should be quarantined
   def test_quarantined?(example)
-    quarantine_map.key?(example.id)
+    quarantined_ids.include?(example.id)
   end
 
   # Param: Symbol, Any
