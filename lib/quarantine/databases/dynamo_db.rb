@@ -23,23 +23,10 @@ class Quarantine
         result&.items
       end
 
-      def batch_write_item(table_name, items, additional_attributes = {}, dedup_keys = %w[id full_description])
-        return if items.empty?
-
-        scanned_items = scan(table_name)
-
-        deduped_items = items.reject do |item|
-          item_hash = item.to_hash
-          scanned_items.any? do |scanned_item|
-            dedup_keys.all? { |key| item_hash[key.to_sym] == scanned_item[key] }
-          end
-        end
-
-        return if deduped_items.empty?
-
+      def batch_write_item(table_name, items, additional_attributes = {})
         dynamodb.batch_write_item(
           request_items: {
-            table_name => deduped_items.map do |item|
+            table_name => items.map do |item|
               {
                 put_request: {
                   item: { **item.to_hash, **additional_attributes }

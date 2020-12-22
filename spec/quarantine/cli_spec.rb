@@ -6,8 +6,7 @@ describe Quarantine::CLI do
     it 'options are set with their default value' do
       cli = Quarantine::CLI.new
 
-      expect(cli.options[:quarantine_list_table_name]).to eq('quarantine_list')
-      expect(cli.options[:failed_test_table_name]).to eq('master_failed_tests')
+      expect(cli.options[:test_statuses_table_name]).to eq('test_statuses')
     end
   end
 
@@ -27,24 +26,14 @@ describe Quarantine::CLI do
       expect(cli.options[:region]).to eq('us-west-1')
     end
 
-    it 'define quarantined test table name' do
+    it 'define test statuses table name' do
       cli = Quarantine::CLI.new
 
       ARGV << '-r' << 'us-west-1'
       ARGV << '-q' << 'foo'
       cli.parse
 
-      expect(cli.options[:quarantine_list_table_name]).to eq('foo')
-    end
-
-    it 'define failed test table name' do
-      cli = Quarantine::CLI.new
-
-      ARGV << '-r' << 'us-west-1'
-      ARGV << '-f' << 'bar'
-      cli.parse
-
-      expect(cli.options[:failed_test_table_name]).to eq('bar')
+      expect(cli.options[:test_statuses_table_name]).to eq('foo')
     end
 
     context '#create_tables' do
@@ -65,13 +54,7 @@ describe Quarantine::CLI do
 
         allow(Quarantine::Databases::DynamoDB).to receive(:new).and_return(dynamodb)
         expect(dynamodb).to receive(:create_table).with(
-          'quarantine_list',
-          attributes,
-          additional_arguments
-        ).once
-
-        expect(dynamodb).to receive(:create_table).with(
-          'master_failed_tests',
+          'test_statuses',
           attributes,
           additional_arguments
         ).once

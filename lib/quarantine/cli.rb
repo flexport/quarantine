@@ -9,8 +9,7 @@ class Quarantine
     def initialize
       # default options
       @options = {
-        quarantine_list_table_name: 'quarantine_list',
-        failed_test_table_name: 'master_failed_tests'
+        test_statuses_table_name: 'test_statuses'
       }
     end
 
@@ -26,18 +25,9 @@ class Quarantine
           '-qTABLE',
           '--quarantine_table=TABLE',
           String,
-          "Specify the table name for the quarantine list | Default: #{options[:quarantine_list_table_name]}"
+          "Specify the table name for the quarantine list | Default: #{options[:test_statuses_table_name]}"
         ) do |table_name|
-          options[:quarantine_list_table_name] = table_name
-        end
-
-        parser.on(
-          '-fTABLE',
-          '--failed_table=TABLE',
-          String,
-          "Specify the table name for the failed test list | Default: #{options[:failed_test_table_name]}"
-        ) do |table_name|
-          options[:failed_test_table_name] = table_name
+          options[:test_statuses_table_name] = table_name
         end
 
         parser.on('-h', '--help', 'Prints help page') do
@@ -69,13 +59,7 @@ class Quarantine
       }
 
       begin
-        dynamodb.create_table(options[:quarantine_list_table_name], attributes, additional_arguments)
-      rescue Quarantine::DatabaseError => e
-        warn "#{e&.cause&.class}: #{e&.cause&.message}"
-      end
-
-      begin
-        dynamodb.create_table(options[:failed_test_table_name], attributes, additional_arguments)
+        dynamodb.create_table(options[:test_statuses_table_name], attributes, additional_arguments)
       rescue Quarantine::DatabaseError => e
         warn "#{e&.cause&.class}: #{e&.cause&.message}"
       end
