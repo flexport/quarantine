@@ -107,6 +107,8 @@ end
 
 - Storing custom per-example attributes in the table `:quarantine_extra_attributes, default: ->(example) { {} }`
 
+- A failsafe limit of quarantined tests in a single run `:quarantine_failsafe_limit, default: 10`
+
 ---
 ## Setup Jira Workflow
 

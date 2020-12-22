@@ -14,7 +14,8 @@ module Quarantine::RSpecAdapter # rubocop:disable Style/ClassAndModuleChildren
     @quarantine ||= Quarantine.new(
       database: RSpec.configuration.quarantine_database,
       test_statuses_table_name: RSpec.configuration.quarantine_test_statuses,
-      extra_attributes: RSpec.configuration.quarantine_extra_attributes
+      extra_attributes: RSpec.configuration.quarantine_extra_attributes,
+      failsafe_limit: RSpec.configuration.quarantine_failsafe_limit
     )
   end
 
@@ -27,6 +28,7 @@ module Quarantine::RSpecAdapter # rubocop:disable Style/ClassAndModuleChildren
       config.add_setting(:quarantine_record_tests, { default: true })
       config.add_setting(:quarantine_logging, { default: true })
       config.add_setting(:quarantine_extra_attributes)
+      config.add_setting(:quarantine_failsafe_limit, default: 10)
     end
   end
 
