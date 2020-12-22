@@ -109,6 +109,8 @@ end
 
 - A failsafe limit of quarantined tests in a single run `:quarantine_failsafe_limit, default: 10`
 
+- Releasing a test from quarantine after it records enough consecutive passes `:quarantine_release_at_consecutive_passes, default: nil`
+
 ---
 ## Setup Jira Workflow
 

@@ -53,8 +53,8 @@ describe Quarantine::Databases::DynamoDB do
   end
 
   context '#batch_write_item' do
-    item1 = Quarantine::Test.new('1', 'quarantined', 'quarantined_test_1', 'line 1', '123')
-    item2 = Quarantine::Test.new('2', 'quarantined', 'quarantined_test_2', 'line 2', '-1')
+    item1 = Quarantine::Test.new('1', 'quarantined', 1, 'quarantined_test_1', 'line 1', '123')
+    item2 = Quarantine::Test.new('2', 'quarantined', 1, 'quarantined_test_2', 'line 2', '-1')
 
     let(:database) { Quarantine::Databases::DynamoDB.new(region: 'us-west-1', stub_responses: true) }
     let(:items) { [item1, item2] }
@@ -91,7 +91,7 @@ describe Quarantine::Databases::DynamoDB do
 
     it 'throws exception Quarantine::DatabaseError on AWS errors' do
       items = [
-        Quarantine::Test.new('some_id', 'some status', 'some description', 'some location',
+        Quarantine::Test.new('some_id', 'some status', 1, 'some description', 'some location',
                              { build_number: 'some build_number' })
       ]
       error = Aws::DynamoDB::Errors::LimitExceededException.new(Quarantine, 'limit exceeded')
