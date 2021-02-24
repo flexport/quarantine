@@ -24,7 +24,7 @@ class JiraController < ApplicationController
                               })
 
       case result.count
-      when 0
+      when 0 # rubocop:disable Lint/EmptyWhen
         # send alert that quarantined test was unable to be removed
       when 1
         quarantined_test = result.items[0]
