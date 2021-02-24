@@ -5,26 +5,30 @@ describe Quarantine do
     Quarantine.bind_rspec
   end
 
-  let(:database_options) { {
-    type: :dynamodb,
-    region: 'us-west-1',
-  } }
+  let(:database_options) do
+    {
+      type: :dynamodb,
+      region: 'us-west-1'
+    }
+  end
 
-  let(:options) { {
-    database: database_options,
-  } }
+  let(:options) do
+    {
+      database: database_options
+    }
+  end
 
   context '#fetch_quarantine_list' do
     test1 = {
       'full_description' => 'quarantined_test_1',
       'id' => '1',
-      'location' => 'line 1',
+      'location' => 'line 1'
     }
 
     test2 = {
       'full_description' => 'quarantined_test_2',
       'id' => '2',
-      'location' => 'line 2',
+      'location' => 'line 2'
     }
 
     let(:quarantine) { Quarantine.new(options) }
@@ -68,7 +72,7 @@ describe Quarantine do
     end
 
     context 'with extra attributes' do
-      let(:options) { {database: database_options, extra_attributes: Proc.new { {build_number: 5} }} }
+      let(:options) { { database: database_options, extra_attributes: proc { { build_number: 5 } } } }
 
       it 'adds the failed test to the @failed_test array' do |example|
         quarantine.record_failed_test(example)
@@ -96,7 +100,7 @@ describe Quarantine do
     end
 
     context 'with extra attributes' do
-      let(:options) { {database: database_options, extra_attributes: Proc.new { {build_number: 5} }} }
+      let(:options) { { database: database_options, extra_attributes: proc { { build_number: 5 } } } }
 
       it 'adds the flaky test to the @flaky_test array' do |example|
         quarantine.record_flaky_test(example)

@@ -58,7 +58,7 @@ class Quarantine
       dynamodb = Quarantine::Databases::DynamoDB.new(region: options[:region])
 
       attributes = [
-        { attribute_name: 'id', attribute_type: 'S', key_type: 'HASH' },
+        { attribute_name: 'id', attribute_type: 'S', key_type: 'HASH' }
       ]
 
       additional_arguments = {

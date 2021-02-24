@@ -6,14 +6,14 @@ describe Quarantine::Databases::DynamoDB do
       'full_description' => 'quarantined_test_1',
       'id' => '1',
       'location' => 'line 1',
-      'extra_attributes' => {'build_number' => '123'},
+      'extra_attributes' => { 'build_number' => '123' }
     }
 
     test2 = {
       'full_description' => 'quarantined_test_2',
       'id' => '2',
       'location' => 'line 2',
-      'extra_attributes' => {'build_number' => '-1'},
+      'extra_attributes' => { 'build_number' => '-1' }
     }
 
     let(:dynamodb) { Aws::DynamoDB::Client.new(stub_responses: true) }
@@ -103,7 +103,7 @@ describe Quarantine::Databases::DynamoDB do
       }
 
       allow(database).to receive(:scan).and_return([
-                                                     {'id' => '2', 'full_description' => 'quarantined_test_2'}
+                                                     { 'id' => '2', 'full_description' => 'quarantined_test_2' }
                                                    ])
 
       expect(database.dynamodb).to receive(:batch_write_item).with(result).once
@@ -113,7 +113,7 @@ describe Quarantine::Databases::DynamoDB do
 
     it 'throws exception Quarantine::DatabaseError on AWS errors' do
       items = [
-        Quarantine::Test.new('some_id', 'some description', 'some location', {build_number: 'some build_number'})
+        Quarantine::Test.new('some_id', 'some description', 'some location', { build_number: 'some build_number' })
       ]
       error = Aws::DynamoDB::Errors::LimitExceededException.new(Quarantine, 'limit exceeded')
       allow(database.dynamodb).to receive(:scan).and_raise(error)

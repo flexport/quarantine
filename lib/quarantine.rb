@@ -19,12 +19,7 @@ module RSpec
 end
 
 class Quarantine
-  attr_reader :options
-  attr_reader :quarantined_ids
-  attr_reader :failed_tests
-  attr_reader :flaky_tests
-  attr_reader :duplicate_tests
-  attr_reader :summary
+  attr_reader :options, :quarantined_ids, :failed_tests, :flaky_tests, :duplicate_tests, :summary
 
   def self.bind_rspec
     RSpecAdapter.bind_rspec
@@ -41,12 +36,13 @@ class Quarantine
   def database
     database_options = options[:database].dup
     type = database_options.delete(:type)
-    @database ||= case type
-    when :dynamodb
-      Quarantine::Databases::DynamoDB.new(database_options)
-    else
-      raise Quarantine::UnsupportedDatabaseError.new("Quarantine does not support database type: #{type.inspect}")
-    end
+    @database ||= \
+      case type
+      when :dynamodb
+        Quarantine::Databases::DynamoDB.new(database_options)
+      else
+        raise Quarantine::UnsupportedDatabaseError.new("Quarantine does not support database type: #{type.inspect}")
+      end
   end
 
   # Scans the quarantine_list from the database and store their IDs in quarantined_ids
@@ -63,15 +59,16 @@ class Quarantine
       )
     end
 
-    @quarantined_ids = quarantine_list.map{|q| q['id']}
+    @quarantined_ids = quarantine_list.map { |q| q['id'] }
   end
 
   # Based off the type, upload a list of tests to a particular database table
   def upload_tests(type)
-    if type == :failed
+    case type
+    when :failed
       tests = failed_tests
       table_name = options[:failed_tests_table]
-    elsif type == :flaky
+    when :flaky
       tests = flaky_tests
       table_name = options[:list_table]
     else
@@ -99,10 +96,10 @@ class Quarantine
 
   def create_test(example)
     extra_attributes = if options[:extra_attributes]
-      options[:extra_attributes].call(example)
-    else
-      {}
-    end
+                         options[:extra_attributes].call(example)
+                       else
+                         {}
+                       end
     Quarantine::Test.new(example.id, example.full_description, example.location, extra_attributes)
   end
 

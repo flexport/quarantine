@@ -1,10 +1,6 @@
 class Quarantine
   module Databases
     class Base
-      def initialize
-        raise NotImplementedError
-      end
-
       def scan
         raise NotImplementedError
       end
