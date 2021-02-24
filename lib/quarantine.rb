@@ -19,20 +19,15 @@ module RSpec
 end
 
 class Quarantine
-  extend RSpecAdapter
+  attr_reader :options, :quarantine_map, :failed_tests, :flaky_tests, :duplicate_tests, :buildkite_build_number,
+              :summary
 
-  attr_accessor :database
-  attr_reader :quarantine_map, :failed_tests, :flaky_tests, :duplicate_tests, :buildkite_build_number, :summary
+  def self.bind_rspec
+    RSpecAdapter.bind_rspec
+  end
 
-  def initialize(options = {})
-    case options[:database]
-    # default database option is dynamodb
-    when :dynamodb, nil
-      @database = Quarantine::Databases::DynamoDB.new(options)
-    else
-      raise Quarantine::UnsupportedDatabaseError.new("Quarantine does not support #{options[:database]}")
-    end
-
+  def initialize(options)
+    @options = options
     @quarantine_map = {}
     @failed_tests = []
     @flaky_tests = []
@@ -40,15 +35,27 @@ class Quarantine
     @summary = { id: 'quarantine', quarantined_tests: [], flaky_tests: [], database_failures: [] }
   end
 
+  def database
+    database_options = options[:database].dup
+    type = database_options.delete(:type)
+    @database ||= \
+      case type
+      when :dynamodb
+        Quarantine::Databases::DynamoDB.new(database_options)
+      else
+        raise Quarantine::UnsupportedDatabaseError.new("Quarantine does not support database type: #{type.inspect}")
+      end
+  end
+
   # Scans the quarantine_list from the database and store the individual tests in quarantine_map
   def fetch_quarantine_list
     begin
-      quarantine_list = database.scan(RSpec.configuration.quarantine_list_table)
+      quarantine_list = database.scan(options[:list_table])
     rescue Quarantine::DatabaseError => e
       add_to_summary(:database_failures, "#{e&.cause&.class}: #{e&.cause&.message}")
       raise Quarantine::DatabaseError.new(
         <<~ERROR_MSG
-          Failed to pull the quarantine list from #{RSpec.configuration.quarantine_list_table}
+          Failed to pull the quarantine list from #{options[:list_table]}
           because of #{e&.cause&.class}: #{e&.cause&.message}
         ERROR_MSG
       )
@@ -74,10 +81,10 @@ class Quarantine
     case type
     when :failed
       tests = failed_tests
-      table_name = RSpec.configuration.quarantine_failed_tests_table
+      table_name = options[:failed_tests_table]
     when :flaky
       tests = flaky_tests
-      table_name = RSpec.configuration.quarantine_list_table
+      table_name = options[:list_table]
     else
       raise Quarantine::UnknownUploadError.new(
         "Quarantine gem did not know how to handle #{type} upload of tests to dynamodb"

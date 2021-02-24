@@ -7,11 +7,8 @@ class Quarantine
     class DynamoDB < Base
       attr_accessor :dynamodb
 
-      def initialize(aws_region: 'us-west-1', aws_credentials: nil, **_additional_arguments)
+      def initialize(options)
         super()
-
-        options = { region: aws_region }
-        options[:credentials] = aws_credentials if aws_credentials
 
         @dynamodb = Aws::DynamoDB::Client.new(options)
       end
