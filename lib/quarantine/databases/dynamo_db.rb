@@ -8,6 +8,8 @@ class Quarantine
       attr_accessor :dynamodb
 
       def initialize(options)
+        super()
+
         @dynamodb = Aws::DynamoDB::Client.new(options)
       end
 
