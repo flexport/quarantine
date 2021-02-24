@@ -1,9 +1,6 @@
 class Quarantine
   class Test
-    attr_accessor :id
-    attr_accessor :full_description
-    attr_accessor :location
-    attr_accessor :build_number
+    attr_accessor :id, :full_description, :location, :build_number
 
     def initialize(id, full_description, location, build_number)
       @id = id

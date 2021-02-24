@@ -23,9 +23,10 @@ class JiraController < ApplicationController
                                 expression_attribute_values: { ":jira_key": jira_key }
                               })
 
-      if result.count == 0
+      case result.count
+      when 0
         # send alert that quarantined test was unable to be removed
-      elsif result.count == 1
+      when 1
         quarantined_test = result.items[0]
 
         # unquarantined the test related to the ticket

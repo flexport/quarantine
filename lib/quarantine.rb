@@ -22,12 +22,7 @@ class Quarantine
   extend RSpecAdapter
 
   attr_accessor :database
-  attr_reader :quarantine_map
-  attr_reader :failed_tests
-  attr_reader :flaky_tests
-  attr_reader :duplicate_tests
-  attr_reader :buildkite_build_number
-  attr_reader :summary
+  attr_reader :quarantine_map, :failed_tests, :flaky_tests, :duplicate_tests, :buildkite_build_number, :summary
 
   def initialize(options = {})
     case options[:database]
@@ -76,10 +71,11 @@ class Quarantine
 
   # Based off the type, upload a list of tests to a particular database table
   def upload_tests(type)
-    if type == :failed
+    case type
+    when :failed
       tests = failed_tests
       table_name = RSpec.configuration.quarantine_failed_tests_table
-    elsif type == :flaky
+    when :flaky
       tests = flaky_tests
       table_name = RSpec.configuration.quarantine_list_table
     else
