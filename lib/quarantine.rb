@@ -19,7 +19,8 @@ module RSpec
 end
 
 class Quarantine
-  attr_reader :options, :quarantine_map, :failed_tests, :flaky_tests, :duplicate_tests, :buildkite_build_number, :summary
+  attr_reader :options, :quarantine_map, :failed_tests, :flaky_tests, :duplicate_tests, :buildkite_build_number,
+              :summary
 
   def self.bind_rspec
     RSpecAdapter.bind_rspec
@@ -38,11 +39,11 @@ class Quarantine
     database_options = options[:database].dup
     type = database_options.delete(:type)
     @database ||= case type
-    when :dynamodb
-      Quarantine::Databases::DynamoDB.new(database_options)
-    else
-      raise Quarantine::UnsupportedDatabaseError.new("Quarantine does not support database type: #{type.inspect}")
-    end
+                  when :dynamodb
+                    Quarantine::Databases::DynamoDB.new(database_options)
+                  else
+                    raise Quarantine::UnsupportedDatabaseError.new("Quarantine does not support database type: #{type.inspect}")
+                  end
   end
 
   # Scans the quarantine_list from the database and store the individual tests in quarantine_map

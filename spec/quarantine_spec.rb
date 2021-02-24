@@ -5,9 +5,11 @@ describe Quarantine do
     Quarantine.bind_rspec
   end
 
-  let(:options) { {
-    database: {type: :dynamodb, region: 'us-west-1'},
-  } }
+  let(:options) do
+    {
+      database: { type: :dynamodb, region: 'us-west-1' }
+    }
+  end
 
   context '#fetch_quarantine_list' do
     test1 = {
