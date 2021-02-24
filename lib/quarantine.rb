@@ -38,12 +38,13 @@ class Quarantine
   def database
     database_options = options[:database].dup
     type = database_options.delete(:type)
-    @database ||= case type
-                  when :dynamodb
-                    Quarantine::Databases::DynamoDB.new(database_options)
-                  else
-                    raise Quarantine::UnsupportedDatabaseError.new("Quarantine does not support database type: #{type.inspect}")
-                  end
+    @database ||= \
+      case type
+      when :dynamodb
+        Quarantine::Databases::DynamoDB.new(database_options)
+      else
+        raise Quarantine::UnsupportedDatabaseError.new("Quarantine does not support database type: #{type.inspect}")
+      end
   end
 
   # Scans the quarantine_list from the database and store the individual tests in quarantine_map

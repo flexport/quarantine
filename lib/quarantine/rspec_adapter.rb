@@ -1,4 +1,4 @@
-module Quarantine
+class Quarantine
   module RSpecAdapter
     # Purpose: create an instance of Quarantine which contains information
     #          about the test suite (ie. quarantined tests) and binds RSpec configurations
@@ -45,7 +45,8 @@ module Quarantine
     def self.bind_quarantine_checker
       ::RSpec.configure do |config|
         config.after(:each) do |example|
-          if RSpec.configuration.skip_quarantined_tests && Quarantine::RSpecAdapter.quarantine.test_quarantined?(example)
+          if RSpec.configuration.skip_quarantined_tests \
+            && Quarantine::RSpecAdapter.quarantine.test_quarantined?(example)
             Quarantine::RSpecAdapter.quarantine.pass_flaky_test(example)
           end
         end
