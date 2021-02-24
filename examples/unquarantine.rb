@@ -25,7 +25,7 @@ class JiraController < ApplicationController
 
       case result.count
       when 0
-        puts "quarantined test was unable to be removed"
+        puts 'quarantined test was unable to be removed'
       when 1
         quarantined_test = result.items[0]
 
