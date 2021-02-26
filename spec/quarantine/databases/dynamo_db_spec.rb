@@ -6,14 +6,14 @@ describe Quarantine::Databases::DynamoDB do
       'full_description' => 'quarantined_test_1',
       'id' => '1',
       'location' => 'line 1',
-      'build_number' => '123'
+      'extra_attributes' => { 'build_number' => '123' }
     }
 
     test2 = {
       'full_description' => 'quarantined_test_2',
       'id' => '2',
       'location' => 'line 2',
-      'build_number' => '-1'
+      'extra_attributes' => { 'build_number' => '-1' }
     }
 
     let(:dynamodb) { Aws::DynamoDB::Client.new(stub_responses: true) }
@@ -37,12 +37,12 @@ describe Quarantine::Databases::DynamoDB do
       expect(items[0]['id']).to eq('1')
       expect(items[0]['full_description']).to eq('quarantined_test_1')
       expect(items[0]['location']).to eq('line 1')
-      expect(items[0]['build_number']).to eq('123')
+      expect(items[0]['extra_attributes']).to eq('build_number' => '123')
 
       expect(items[1]['id']).to eq('2')
       expect(items[1]['full_description']).to eq('quarantined_test_2')
       expect(items[1]['location']).to eq('line 2')
-      expect(items[1]['build_number']).to eq('-1')
+      expect(items[1]['extra_attributes']).to eq('build_number' => '-1')
     end
 
     it 'throws exception Quarantine::DatabaseError on AWS errors' do
@@ -59,7 +59,6 @@ describe Quarantine::Databases::DynamoDB do
     let(:database) { Quarantine::Databases::DynamoDB.new(region: 'us-west-1') }
     let(:items) { [item1, item2] }
     let(:additional_attributes) { { a: 'a', b: 'b' } }
-    let(:dedup_keys) { %w[id location full_description] }
 
     it 'has arguments splatted correctly' do
       result = {
@@ -103,20 +102,18 @@ describe Quarantine::Databases::DynamoDB do
         }
       }
 
-      scanned_hash = item2.to_string_hash
-      scanned_hash['build_number'] = rand(10).to_s
       allow(database).to receive(:scan).and_return([
-                                                     scanned_hash
+                                                     { 'id' => '2', 'full_description' => 'quarantined_test_2' }
                                                    ])
 
       expect(database.dynamodb).to receive(:batch_write_item).with(result).once
 
-      database.batch_write_item('foo', items, additional_attributes, dedup_keys)
+      database.batch_write_item('foo', items, additional_attributes)
     end
 
     it 'throws exception Quarantine::DatabaseError on AWS errors' do
       items = [
-        Quarantine::Test.new('some_id', 'some description', 'some location', 'some build_number')
+        Quarantine::Test.new('some_id', 'some description', 'some location', { build_number: 'some build_number' })
       ]
       error = Aws::DynamoDB::Errors::LimitExceededException.new(Quarantine, 'limit exceeded')
       allow(database.dynamodb).to receive(:scan).and_raise(error)
@@ -130,11 +127,11 @@ describe Quarantine::Databases::DynamoDB do
     it 'has arguments splatted correctly' do
       result = {
         table_name: 'foo',
-        key: { id: '1', build_number: '123' }
+        key: { id: '1' }
       }
       expect(database.dynamodb).to receive(:delete_item).with(result)
 
-      database.delete_item('foo', id: '1', build_number: '123')
+      database.delete_item('foo', id: '1')
     end
 
     it 'throws exception Quarantine::DatabaseError on AWS errors' do

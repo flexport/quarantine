@@ -29,6 +29,7 @@ class Quarantine
         config.add_setting(:quarantine_record_failed_tests, { default: true })
         config.add_setting(:quarantine_record_flaky_tests, { default: true })
         config.add_setting(:quarantine_logging, { default: true })
+        config.add_setting(:quarantine_extra_attributes)
       end
     end
 

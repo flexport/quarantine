@@ -26,14 +26,12 @@ class Quarantine
       def batch_write_item(table_name, items, additional_attributes = {}, dedup_keys = %w[id full_description])
         return if items.empty?
 
-        # item_a is a duplicate of item_b if all values for each dedup_key in both item_a and item_b match
-        is_a_duplicate = ->(item_a, item_b) { dedup_keys.all? { |key| item_a[key] == item_b[key] } }
-
         scanned_items = scan(table_name)
 
         deduped_items = items.reject do |item|
+          item_hash = item.to_hash
           scanned_items.any? do |scanned_item|
-            is_a_duplicate.call(item.to_string_hash, scanned_item)
+            dedup_keys.all? { |key| item_hash[key.to_sym] == scanned_item[key] }
           end
         end
 

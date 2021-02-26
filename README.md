@@ -6,8 +6,7 @@ Quarantine provides a run-time solution to diagnosing and disabling flaky tests 
 The quarantine gem supports testing frameworks:
 - [RSpec](http://rspec.info/)
 
-The quarantine gem supports CI pipelines:
-- [Buildkite](https://buildkite.com/docs/tutorials/getting-started)
+The quarantine gem supports any CI pipeline.
 
 If you are interested in using quarantine but it does not support your CI or testing framework, feel free to reach out or create an issue and we can try to make it happen.
 
@@ -110,8 +109,18 @@ end
 
 - Outputting quarantined gem info `:quarantine_logging, default: true`
 
+- Storing custom per-example attributes in the table `:quarantine_extra_attributes, default: ->(example) { {} }`
+
 ---
 ## Setup Jira Workflow
+
+```rb
+RSpec.configure do |config|
+  # Store Buildkite build number alongside test in database tables
+  config.extra_attributes = ->(example) { {
+    build_number: ENV['BUILDKITE_BUILD_NUMBER'] || '-1',
+  } }
+```
 
 To automatically create Jira tickets, take a look at: `examples/create_tickets.rb`
 

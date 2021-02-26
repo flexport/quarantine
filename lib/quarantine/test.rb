@@ -1,12 +1,12 @@
 class Quarantine
   class Test
-    attr_accessor :id, :full_description, :location, :build_number
+    attr_accessor :id, :full_description, :location, :extra_attributes
 
-    def initialize(id, full_description, location, build_number)
+    def initialize(id, full_description, location, extra_attributes)
       @id = id
       @full_description = full_description
       @location = location
-      @build_number = build_number
+      @extra_attributes = extra_attributes
     end
 
     def to_hash
@@ -14,16 +14,7 @@ class Quarantine
         id: id,
         full_description: full_description,
         location: location,
-        build_number: build_number
-      }
-    end
-
-    def to_string_hash
-      {
-        'id' => id,
-        'full_description' => full_description,
-        'location' => location,
-        'build_number' => build_number
+        extra_attributes: extra_attributes
       }
     end
   end
