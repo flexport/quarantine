@@ -86,7 +86,8 @@ Run `rspec` on the test
 CI=1 BRANCH=master rspec <filename>
 ```
 
-If the test fails and passes on the test run (rspec-retry re-ran the test), the test should be quarantined and uploaded to DynamoDB. Check the `test_statuses` table in DynamoDB.
+All tests statuses are stored in DynamoDB. If the test fails and passes on the test run (i.e. rspec-retry re-ran the
+test), then test's status is `quarantined`. Check the `test_statuses` table in DynamoDB.
 
 ## Configuration
 
