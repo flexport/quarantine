@@ -47,7 +47,7 @@ describe Quarantine::Databases::DynamoDB do
 
     it 'throws exception Quarantine::DatabaseError on AWS errors' do
       error = Aws::DynamoDB::Errors::TableNotFoundException.new(Quarantine, 'table not found')
-      allow(database.dynamodb).to receive(:scan).and_raise(error)
+      expect(database.dynamodb).to receive(:scan).and_raise(error)
       expect { database.scan('foo') }.to raise_error(Quarantine::DatabaseError)
     end
   end
@@ -56,7 +56,7 @@ describe Quarantine::Databases::DynamoDB do
     item1 = Quarantine::Test.new('1', 'quarantined', 'quarantined_test_1', 'line 1', '123')
     item2 = Quarantine::Test.new('2', 'quarantined', 'quarantined_test_2', 'line 2', '-1')
 
-    let(:database) { Quarantine::Databases::DynamoDB.new(region: 'us-west-1') }
+    let(:database) { Quarantine::Databases::DynamoDB.new(region: 'us-west-1', stub_responses: true) }
     let(:items) { [item1, item2] }
     let(:additional_attributes) { { a: 'a', b: 'b' } }
 
@@ -84,7 +84,6 @@ describe Quarantine::Databases::DynamoDB do
         }
       }
 
-      allow(database).to receive(:scan).and_return([])
       expect(database.dynamodb).to receive(:batch_write_item).with(result).once
 
       database.batch_write_item('foo', items, additional_attributes)
@@ -96,7 +95,7 @@ describe Quarantine::Databases::DynamoDB do
                              { build_number: 'some build_number' })
       ]
       error = Aws::DynamoDB::Errors::LimitExceededException.new(Quarantine, 'limit exceeded')
-      allow(database.dynamodb).to receive(:scan).and_raise(error)
+      expect(database.dynamodb).to receive(:batch_write_item).and_raise(error)
       expect { database.batch_write_item('foo', items) }.to raise_error(Quarantine::DatabaseError)
     end
   end
@@ -116,7 +115,7 @@ describe Quarantine::Databases::DynamoDB do
 
     it 'throws exception Quarantine::DatabaseError on AWS errors' do
       error = Aws::DynamoDB::Errors::IndexNotFoundException.new(Quarantine, 'index not found')
-      allow(database.dynamodb).to receive(:delete_item).and_raise(error)
+      expect(database.dynamodb).to receive(:delete_item).and_raise(error)
       expect { database.delete_item('foo', id: '1') }.to raise_error(Quarantine::DatabaseError)
     end
   end
@@ -154,7 +153,7 @@ describe Quarantine::Databases::DynamoDB do
 
     it 'throws exception Quarantine::DatabaseError on AWS error' do
       error = Aws::DynamoDB::Errors::IndexNotFoundException.new(Quarantine, 'index not found')
-      allow(database.dynamodb).to receive(:create_table).and_raise(error)
+      expect(database.dynamodb).to receive(:create_table).and_raise(error)
       expect { database.create_table('foo', [], {}) }.to raise_error(Quarantine::DatabaseError)
     end
   end
