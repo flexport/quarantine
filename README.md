@@ -64,8 +64,7 @@ Setup tables in AWS DynamoDB to support pulling and uploading quarantined tests
 bundle exec quarantine_dynamodb -h    # see all options
 
 bundle exec quarantine_dynamodb \     # create the tables in us-west-1 in aws dynamodb
-  --region us-west-1                  # with "quarantine_list" and "master_failed_tests"
-                                      # table names
+  --region us-west-1                  # with "test_statuses" table name
 ```
 
 You are all set to start quarantining tests!
@@ -87,7 +86,8 @@ Run `rspec` on the test
 CI=1 BRANCH=master rspec <filename>
 ```
 
-If the test fails and passes on the test run (rspec-retry re-ran the test), the test should be quarantined and uploaded to DynamoDB. Check the `quarantine_list` table in DynamoDB.
+All tests statuses are stored in DynamoDB. If the test fails and passes on the test run (i.e. rspec-retry re-ran the
+test), then test's status is `quarantined`. Check the `test_statuses` table in DynamoDB.
 
 ## Configuration
 
@@ -97,15 +97,11 @@ RSpec.configure do |config|
     config.VAR_NAME = VALUE
 end
 ```
-- Table name for quarantined tests `:quarantine_list_table, default: "quarantine_list"`
-
-- Table name where failed test are uploaded `:quarantine_failed_tests_table, default: "master_failed_tests"`
+- Table name for test statuses `:test_statuses_table, default: "test_statuses"`
 
 - Skipping quarantined tests during test runs `:skip_quarantined_tests, default: true`
 
-- Recording failed tests `:quarantine_record_failed_tests, default: true`
-
-- Recording flaky tests `:quarantine_record_flaky_tests, default: true`
+- Recording test statuses `:quarantine_record_tests, default: true`
 
 - Outputting quarantined gem info `:quarantine_logging, default: true`
 

@@ -19,7 +19,7 @@ module RSpec
 end
 
 class Quarantine
-  attr_reader :options, :quarantined_ids, :failed_tests, :flaky_tests, :duplicate_tests, :summary
+  attr_reader :options, :quarantined_ids, :tests
 
   def self.bind_rspec
     RSpecAdapter.bind_rspec
@@ -28,9 +28,8 @@ class Quarantine
   def initialize(options)
     @options = options
     @quarantined_ids = []
-    @failed_tests = []
-    @flaky_tests = []
-    @summary = { id: 'quarantine', quarantined_tests: [], flaky_tests: [], database_failures: [] }
+    @tests = {}
+    @database_failures = []
   end
 
   def database
@@ -45,84 +44,61 @@ class Quarantine
       end
   end
 
-  # Scans the quarantine_list from the database and store their IDs in quarantined_ids
-  def fetch_quarantine_list
+  # Scans the test_statuses from the database and store their IDs in quarantined_ids
+  def fetch_test_statuses
     begin
-      quarantine_list = database.scan(options[:list_table])
+      test_statuses = database.scan(options[:test_statuses_table_name])
     rescue Quarantine::DatabaseError => e
-      add_to_summary(:database_failures, "#{e&.cause&.class}: #{e&.cause&.message}")
+      @database_failures << "#{e&.cause&.class}: #{e&.cause&.message}"
       raise Quarantine::DatabaseError.new(
         <<~ERROR_MSG
-          Failed to pull the quarantine list from #{options[:list_table]}
+          Failed to pull the quarantine list from #{options[:test_statuses_table_name]}
           because of #{e&.cause&.class}: #{e&.cause&.message}
         ERROR_MSG
       )
     end
 
-    @quarantined_ids = quarantine_list.map { |q| q['id'] }
+    @quarantined_ids = test_statuses
+                       .group_by { |t| t['id'] }
+                       .map { |_id, tests| tests.max_by { |t| t['created_at'] } }
+                       .filter { |t| t['last_status'] == 'quarantined' }
+                       .map { |t| t['id'] }
   end
 
-  # Based off the type, upload a list of tests to a particular database table
-  def upload_tests(type)
-    case type
-    when :failed
-      tests = failed_tests
-      table_name = options[:failed_tests_table]
-    when :flaky
-      tests = flaky_tests
-      table_name = options[:list_table]
-    else
-      raise Quarantine::UnknownUploadError.new(
-        "Quarantine gem did not know how to handle #{type} upload of tests to dynamodb"
-      )
-    end
-
-    return unless tests.length < 10 && tests.length > 0
+  def upload_tests
+    return if tests.empty? || tests.values.count { |test| test.status == :quarantined } >= 10
 
     begin
       timestamp = Time.now.to_i / 1000 # Truncated millisecond from timestamp for reasons specific to Flexport
       database.batch_write_item(
-        table_name,
-        tests,
+        options[:test_statuses_table_name],
+        tests.values,
         {
-          created_at: timestamp,
           updated_at: timestamp
         }
       )
     rescue Quarantine::DatabaseError => e
-      add_to_summary(:database_failures, "#{e&.cause&.class}: #{e&.cause&.message}")
+      @database_failures << "#{e&.cause&.class}: #{e&.cause&.message}"
     end
   end
 
-  def create_test(example)
+  # Param: RSpec::Core::Example
+  # Add the example to the internal tests list
+  def record_test(example, status)
     extra_attributes = if options[:extra_attributes]
                          options[:extra_attributes].call(example)
                        else
                          {}
                        end
-    Quarantine::Test.new(example.id, example.full_description, example.location, extra_attributes)
-  end
+    test = Quarantine::Test.new(example.id, status, example.full_description, example.location, extra_attributes)
 
-  # Param: RSpec::Core::Example
-  # Add the example to the internal failed tests list
-  def record_failed_test(example)
-    failed_tests << create_test(example)
-  end
-
-  # Param: RSpec::Core::Example
-  # Add the example to the internal flaky tests list
-  def record_flaky_test(example)
-    flaky_test = create_test(example)
-
-    flaky_tests << flaky_test
-    add_to_summary(:flaky_tests, flaky_test.id)
+    tests[test.id] = test
   end
 
   # Param: RSpec::Core::Example
   # Clear exceptions on a flaky tests that has been quarantined
   def pass_flaky_test(example)
     example.clear_exception!
-    add_to_summary(:quarantined_tests, example.id)
   end
 
   # Param: RSpec::Core::Example
@@ -131,9 +107,11 @@ class Quarantine
     quarantined_ids.include?(example.id)
   end
 
-  # Param: Symbol, Any
-  # Adds the item to the specified attribute in summary
-  def add_to_summary(attribute, item)
-    summary[attribute] << item if summary.key?(attribute)
+  def summary
+    {
+      id: 'quarantine',
+      tests: tests.transform_values(&:status),
+      database_failures: @database_failures
+    }
   end
 end

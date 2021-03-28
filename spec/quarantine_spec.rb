@@ -1,10 +1,6 @@
 require 'spec_helper'
 
 describe Quarantine do
-  before(:all) do
-    Quarantine.bind_rspec
-  end
-
   let(:database_options) do
     {
       type: :dynamodb,
@@ -18,17 +14,19 @@ describe Quarantine do
     }
   end
 
-  context '#fetch_quarantine_list' do
+  context '#fetch_test_statuses' do
     test1 = {
       'full_description' => 'quarantined_test_1',
       'id' => '1',
-      'location' => 'line 1'
+      'location' => 'line 1',
+      'last_status' => 'quarantined'
     }
 
     test2 = {
       'full_description' => 'quarantined_test_2',
       'id' => '2',
-      'location' => 'line 2'
+      'location' => 'line 2',
+      'last_status' => 'quarantined'
     }
 
     let(:quarantine) { Quarantine.new(options) }
@@ -38,7 +36,7 @@ describe Quarantine do
     it 'correctly stores quarantined tests pulled from DynamoDB' do
       allow(quarantine.database).to receive(:scan).and_return(stub_multiple_tests.items)
 
-      quarantine.fetch_quarantine_list
+      quarantine.fetch_test_statuses
 
       expect(quarantine.quarantined_ids.size).to eq(2)
       expect(quarantine.quarantined_ids.include?('1')).to eq(true)
@@ -49,7 +47,7 @@ describe Quarantine do
       error = Aws::DynamoDB::Errors::LimitExceededException.new(Quarantine, 'limit exceeded')
       allow(quarantine.database.dynamodb).to receive(:scan).and_raise(error)
 
-      expect { quarantine.fetch_quarantine_list }.to raise_error(Quarantine::DatabaseError)
+      expect { quarantine.fetch_test_statuses }.to raise_error(Quarantine::DatabaseError)
 
       expect(quarantine.summary[:database_failures].length).to eq(1)
       expect(quarantine.summary[:database_failures][0]).to eq(
@@ -58,58 +56,32 @@ describe Quarantine do
     end
   end
 
-  context '#record_failed_test' do
+  context '#record_test' do
     let(:quarantine) { Quarantine.new(options) }
 
-    it 'adds the failed test to the @failed_test array' do |example|
-      quarantine.record_failed_test(example)
+    it 'adds the flaky test to the @tests array' do |example|
+      quarantine.record_test(example, :quarantined)
 
-      expect(quarantine.failed_tests.length).to eq(1)
-      expect(quarantine.failed_tests[0].id).to eq(example.id)
-      expect(quarantine.failed_tests[0].full_description).to eq(example.full_description)
-      expect(quarantine.failed_tests[0].location).to eq(example.location)
-      expect(quarantine.failed_tests[0].extra_attributes).to eq({})
+      expect(quarantine.tests.length).to eq(1)
+      expect(quarantine.tests[example.id].id).to eq(example.id)
+      expect(quarantine.tests[example.id].status).to eq(:quarantined)
+      expect(quarantine.tests[example.id].full_description).to eq(example.full_description)
+      expect(quarantine.tests[example.id].location).to eq(example.location)
+      expect(quarantine.tests[example.id].extra_attributes).to eq({})
     end
 
     context 'with extra attributes' do
       let(:options) { { database: database_options, extra_attributes: proc { { build_number: 5 } } } }
 
-      it 'adds the failed test to the @failed_test array' do |example|
-        quarantine.record_failed_test(example)
+      it 'adds the flaky test to the @tests array' do |example|
+        quarantine.record_test(example, :quarantined)
 
-        expect(quarantine.failed_tests.length).to eq(1)
-        expect(quarantine.failed_tests[0].id).to eq(example.id)
-        expect(quarantine.failed_tests[0].full_description).to eq(example.full_description)
-        expect(quarantine.failed_tests[0].location).to eq(example.location)
-        expect(quarantine.failed_tests[0].extra_attributes).to eq(build_number: 5)
-      end
-    end
-  end
-
-  context '#record_flaky_test' do
-    let(:quarantine) { Quarantine.new(options) }
-
-    it 'adds the flaky test to the @flaky_test array' do |example|
-      quarantine.record_flaky_test(example)
-
-      expect(quarantine.flaky_tests.length).to eq(1)
-      expect(quarantine.flaky_tests[0].id).to eq(example.id)
-      expect(quarantine.flaky_tests[0].full_description).to eq(example.full_description)
-      expect(quarantine.flaky_tests[0].location).to eq(example.location)
-      expect(quarantine.flaky_tests[0].extra_attributes).to eq({})
-    end
-
-    context 'with extra attributes' do
-      let(:options) { { database: database_options, extra_attributes: proc { { build_number: 5 } } } }
-
-      it 'adds the flaky test to the @flaky_test array' do |example|
-        quarantine.record_flaky_test(example)
-
-        expect(quarantine.flaky_tests.length).to eq(1)
-        expect(quarantine.flaky_tests[0].id).to eq(example.id)
-        expect(quarantine.flaky_tests[0].full_description).to eq(example.full_description)
-        expect(quarantine.flaky_tests[0].location).to eq(example.location)
-        expect(quarantine.flaky_tests[0].extra_attributes).to eq(build_number: 5)
+        expect(quarantine.tests.length).to eq(1)
+        expect(quarantine.tests[example.id].id).to eq(example.id)
+        expect(quarantine.tests[example.id].status).to eq(:quarantined)
+        expect(quarantine.tests[example.id].full_description).to eq(example.full_description)
+        expect(quarantine.tests[example.id].location).to eq(example.location)
+        expect(quarantine.tests[example.id].extra_attributes).to eq(build_number: 5)
       end
     end
   end
