@@ -76,7 +76,7 @@ require "spec_helper"
 
 describe Quarantine do
   it "this test should flake 33% of the time" do
-    Random.rand(3).to eq(3)
+    expect(Random.rand(3)).to eq(1)
   end
 end
 ```
@@ -156,3 +156,7 @@ The AWS client loads credentials from the following locations (in order of prece
 To get AWS credentials, please contact your AWS administrator to get access to dynamodb and create your credentials through IAM.
 
 More detailed information can be found: [AWS documentation](https://docs.aws.amazon.com/sdkforruby/api/Aws/S3/Client.html)
+
+#### Why is `example.clear_exception` failing locally?
+
+ `example.clear_exception` is an attribute added through `rspec_retry`. Make sure `rspec-retry` has been installed and configured.
