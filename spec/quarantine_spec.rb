@@ -34,7 +34,7 @@ describe Quarantine do
     let(:stub_multiple_tests) { dynamodb.stub_data(:scan, { items: [test1, test2] }) }
 
     it 'correctly stores quarantined tests pulled from DynamoDB' do
-      allow(quarantine.database).to receive(:scan).and_return(stub_multiple_tests.items)
+      expect(quarantine.database).to receive(:scan).and_return(stub_multiple_tests.items)
 
       quarantine.fetch_test_statuses
 
@@ -45,7 +45,7 @@ describe Quarantine do
 
     it 'if dynamodb.scan fails, make sure an exception is throw' do
       error = Aws::DynamoDB::Errors::LimitExceededException.new(Quarantine, 'limit exceeded')
-      allow(quarantine.database.dynamodb).to receive(:scan).and_raise(error)
+      expect(quarantine.database.dynamodb).to receive(:scan).and_raise(error)
 
       expect { quarantine.fetch_test_statuses }.to raise_error(Quarantine::DatabaseError)
 
@@ -82,6 +82,34 @@ describe Quarantine do
         expect(quarantine.tests[example.id].full_description).to eq(example.full_description)
         expect(quarantine.tests[example.id].location).to eq(example.location)
         expect(quarantine.tests[example.id].extra_attributes).to eq(build_number: 5)
+      end
+    end
+  end
+
+  context '#upload_tests' do
+    let(:quarantine) do
+      Quarantine.new(options.merge(test_statuses_table_name: 'test_statuses', failsafe_limit: failsafe_limit))
+    end
+    let(:failsafe_limit) { 10 }
+
+    it 'uploads with a test' do |example|
+      quarantine.record_test(example, :quarantined)
+      expect(quarantine.database).to receive(:batch_write_item)
+      quarantine.upload_tests
+    end
+
+    it "doesn't upload with no tests" do |_example|
+      expect(quarantine.database).to_not receive(:batch_write_item)
+      quarantine.upload_tests
+    end
+
+    context 'with low failsafe limit' do
+      let(:failsafe_limit) { 1 }
+
+      it "doesn't upload" do |example|
+        quarantine.record_test(example, :quarantined)
+        expect(quarantine.database).to_not receive(:batch_write_item)
+        quarantine.upload_tests
       end
     end
   end

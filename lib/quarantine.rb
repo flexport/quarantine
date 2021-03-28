@@ -66,7 +66,7 @@ class Quarantine
   end
 
   def upload_tests
-    return if tests.empty? || tests.values.count { |test| test.status == :quarantined } >= 10
+    return if tests.empty? || tests.values.count { |test| test.status == :quarantined } >= options[:failsafe_limit]
 
     begin
       timestamp = Time.now.to_i / 1000 # Truncated millisecond from timestamp for reasons specific to Flexport
