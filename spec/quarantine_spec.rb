@@ -1,10 +1,6 @@
 require 'spec_helper'
 
 describe Quarantine do
-  before(:all) do
-    Quarantine.bind_rspec
-  end
-
   let(:database_options) do
     {
       type: :dynamodb,
