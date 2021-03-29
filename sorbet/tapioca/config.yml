@@ -1,0 +1,7 @@
+# TEAM: devex
+
+exclude:
+  - minitest
+  - rainbow
+  - rspec-core
+  - rubocop-rails

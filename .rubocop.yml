@@ -1,4 +1,6 @@
-require: rubocop-rails
+require:
+  - rubocop-rails
+  - rubocop-sorbet
 
 AllCops:
   TargetRubyVersion: 2.5
@@ -51,4 +53,39 @@ Lint/SuppressedException:
   Enabled: false
 
 Gemspec/RequiredRubyVersion:
+  Enabled: false
+
+Style/AccessorGrouping:
+  Enabled: false
+
+Sorbet/HasSigil:
+  Enabled: true
+  MinimumStrictness: strict
+  Exclude:
+    - Gemfile
+    - '*.gemspec'
+    - 'examples/**/*.rb'
+    - lib/quarantine/version.rb
+    - 'spec/**/*.rb'
+
+Sorbet/EnforceSigilOrder:
+  Enabled: true
+
+# Need to explicitly disable these
+Sorbet/IgnoreSigil:
+  Enabled: false
+
+Sorbet/FalseSigil:
+  Enabled: false
+
+Sorbet/TrueSigil:
+  Enabled: false
+
+Sorbet/StrictSigil:
+  Enabled: false
+
+Sorbet/StrongSigil:
+  Enabled: false
+
+Sorbet/EnforceSignatures:
   Enabled: false

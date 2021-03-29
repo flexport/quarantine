@@ -1,3 +1,4 @@
+# typed: false
 #
 # This is an very basic example of a webhook that will unquarantine tests automatically
 #
@@ -6,7 +7,10 @@
 #
 
 class JiraController < ApplicationController
+  extend T::Sig
+
   # POST request
+  sig { void }
   def quarantine
     # When jira calls this webhook, in the body, it should provide
     # the key to the Jira ticket which should have previously been
