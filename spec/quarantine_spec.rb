@@ -1,3 +1,4 @@
+# typed: false
 require 'spec_helper'
 
 describe Quarantine do
@@ -10,7 +11,8 @@ describe Quarantine do
 
   let(:options) do
     {
-      database: database_options
+      database: database_options,
+      test_statuses_table_name: 'foo'
     }
   end
 
@@ -19,14 +21,18 @@ describe Quarantine do
       'full_description' => 'quarantined_test_1',
       'id' => '1',
       'location' => 'line 1',
-      'last_status' => 'quarantined'
+      'last_status' => 'quarantined',
+      'consecutive_passes' => 1,
+      'extra_attributes' => {}
     }
 
     test2 = {
       'full_description' => 'quarantined_test_2',
       'id' => '2',
       'location' => 'line 2',
-      'last_status' => 'quarantined'
+      'last_status' => 'quarantined',
+      'consecutive_passes' => 1,
+      'extra_attributes' => {}
     }
 
     let(:quarantine) { Quarantine.new(options) }
@@ -93,7 +99,14 @@ describe Quarantine do
       it 'adds a flaky test to @tests' do |example|
         set_up_test_statuses(
           quarantine,
-          [{ 'id' => example.id, 'last_status' => 'quarantined', 'consecutive_passes' => 5 }]
+          [{
+            'id' => example.id,
+            'last_status' => 'quarantined',
+            'consecutive_passes' => 5,
+            'full_description' => 'quarantined_test',
+            'location' => 'line 1',
+            'extra_attributes' => {}
+          }]
         )
 
         quarantine.record_test(example, :quarantined, passed: true)
@@ -110,7 +123,14 @@ describe Quarantine do
         it 'releases the test' do |example|
           set_up_test_statuses(
             quarantine,
-            [{ 'id' => example.id, 'last_status' => 'quarantined', 'consecutive_passes' => 5 }]
+            [{
+              'id' => example.id,
+              'last_status' => 'quarantined',
+              'consecutive_passes' => 5,
+              'full_description' => 'quarantined_test',
+              'location' => 'line 1',
+              'extra_attributes' => {}
+            }]
           )
 
           quarantine.record_test(example, :quarantined, passed: true)
@@ -171,7 +191,17 @@ describe Quarantine do
     let(:quarantine) { Quarantine.new(options) }
 
     it 'returns true on quarantined test' do |example|
-      set_up_test_statuses(quarantine, [{ 'id' => example.id, 'last_status' => 'quarantined' }])
+      set_up_test_statuses(
+        quarantine,
+        [{
+          'id' => example.id,
+          'last_status' => 'quarantined',
+          'consecutive_passes' => 1,
+          'full_description' => 'quarantined_test',
+          'location' => 'line 1',
+          'extra_attributes' => {}
+        }]
+      )
 
       expect(quarantine.test_quarantined?(example)).to eq(true)
     end

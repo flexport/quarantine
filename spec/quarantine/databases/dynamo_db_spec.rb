@@ -1,3 +1,4 @@
+# typed: false
 require 'spec_helper'
 
 describe Quarantine::Databases::DynamoDB do
@@ -25,7 +26,7 @@ describe Quarantine::Databases::DynamoDB do
     end
 
     it 'is called with the correct table name' do
-      expect(database.dynamodb).to receive(:scan).with(table_name: 'foo').once
+      expect(database.dynamodb).to receive(:scan).with(table_name: 'foo').and_return(OpenStruct.new(items: [])).once
       database.scan('foo')
     end
 
@@ -53,8 +54,22 @@ describe Quarantine::Databases::DynamoDB do
   end
 
   context '#batch_write_item' do
-    item1 = Quarantine::Test.new('1', 'quarantined', 1, 'quarantined_test_1', 'line 1', '123')
-    item2 = Quarantine::Test.new('2', 'quarantined', 1, 'quarantined_test_2', 'line 2', '-1')
+    item1 = Quarantine::Test.new(
+      id: '1',
+      status: :quarantined,
+      consecutive_passes: 1,
+      full_description: 'quarantined_test_1',
+      location: 'line 1',
+      extra_attributes: { foo: '123' }
+    )
+    item2 = Quarantine::Test.new(
+      id: '2',
+      status: :quarantined,
+      consecutive_passes: 1,
+      full_description: 'quarantined_test_2',
+      location: 'line 2',
+      extra_attributes: { foo: '-1' }
+    )
 
     let(:database) { Quarantine::Databases::DynamoDB.new(region: 'us-west-1', stub_responses: true) }
     let(:items) { [item1, item2] }
@@ -66,18 +81,12 @@ describe Quarantine::Databases::DynamoDB do
           'foo' => [
             {
               put_request: {
-                item: {
-                  **item1.to_hash,
-                  **additional_attributes
-                }
+                item: item1.to_hash.merge(additional_attributes)
               }
             },
             {
               put_request: {
-                item: {
-                  **item2.to_hash,
-                  **additional_attributes
-                }
+                item: item2.to_hash.merge(additional_attributes)
               }
             }
           ]
@@ -91,8 +100,14 @@ describe Quarantine::Databases::DynamoDB do
 
     it 'throws exception Quarantine::DatabaseError on AWS errors' do
       items = [
-        Quarantine::Test.new('some_id', 'some status', 1, 'some description', 'some location',
-                             { build_number: 'some build_number' })
+        Quarantine::Test.new(
+          id: 'some_id',
+          status: :some_status,
+          consecutive_passes: 1,
+          full_description: 'some description',
+          location: 'some location',
+          extra_attributes: { build_number: 'some build_number' }
+        )
       ]
       error = Aws::DynamoDB::Errors::LimitExceededException.new(Quarantine, 'limit exceeded')
       expect(database.dynamodb).to receive(:batch_write_item).and_raise(error)

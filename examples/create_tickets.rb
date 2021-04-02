@@ -1,3 +1,4 @@
+# typed: false
 #
 # This is an very basic example of a script that will create tickets for flaky tests
 #

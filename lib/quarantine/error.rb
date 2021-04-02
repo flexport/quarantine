@@ -1,3 +1,5 @@
+# typed: strict
+
 class Quarantine
   class Error < StandardError; end
 

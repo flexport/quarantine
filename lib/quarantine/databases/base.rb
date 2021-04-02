@@ -1,13 +1,35 @@
+# typed: strict
+
 class Quarantine
   module Databases
     class Base
-      def scan
-        raise NotImplementedError
+      extend T::Sig
+      extend T::Helpers
+
+      abstract!
+
+      Item = T.type_alias do
+        {
+          'id' => String,
+          'last_status' => String,
+          'consecutive_passes' => Integer,
+          'full_description' => String,
+          'location' => String,
+          'extra_attributes' => T.untyped
+        }
       end
 
-      def batch_write_item
-        raise NotImplementedError
+      sig { abstract.params(table_name: String).returns(T::Enumerable[Item]) }
+      def scan(table_name); end
+
+      sig do
+        abstract.params(
+          table_name: String,
+          items: T::Array[Item],
+          additional_attributes: T::Hash[T.untyped, T.untyped]
+        ).void
       end
+      def batch_write_item(table_name, items, additional_attributes); end
     end
   end
 end

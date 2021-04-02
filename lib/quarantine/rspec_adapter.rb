@@ -1,7 +1,12 @@
+# typed: strict
+
 module Quarantine::RSpecAdapter # rubocop:disable Style/ClassAndModuleChildren
+  extend T::Sig
+
   # Purpose: create an instance of Quarantine which contains information
   #          about the test suite (ie. quarantined tests) and binds RSpec configurations
   #          and hooks onto the global RSpec class
+  sig { void }
   def self.bind_rspec
     bind_rspec_configurations
     bind_fetch_test_statuses
@@ -10,7 +15,9 @@ module Quarantine::RSpecAdapter # rubocop:disable Style/ClassAndModuleChildren
     bind_logger
   end
 
+  sig { returns(Quarantine) }
   def self.quarantine
+    @quarantine = T.let(@quarantine, T.nilable(Quarantine))
     @quarantine ||= Quarantine.new(
       database: RSpec.configuration.quarantine_database,
       test_statuses_table_name: RSpec.configuration.quarantine_test_statuses,
@@ -20,6 +27,7 @@ module Quarantine::RSpecAdapter # rubocop:disable Style/ClassAndModuleChildren
   end
 
   # Purpose: binds rspec configuration variables
+  sig { void }
   def self.bind_rspec_configurations
     ::RSpec.configure do |config|
       config.add_setting(:quarantine_database, default: { type: :dynamodb, region: 'us-west-1' })
@@ -34,6 +42,7 @@ module Quarantine::RSpecAdapter # rubocop:disable Style/ClassAndModuleChildren
   end
 
   # Purpose: binds quarantine to fetch the test_statuses from dynamodb in the before suite
+  sig { void }
   def self.bind_fetch_test_statuses
     ::RSpec.configure do |config|
       config.before(:suite) do
@@ -43,6 +52,7 @@ module Quarantine::RSpecAdapter # rubocop:disable Style/ClassAndModuleChildren
   end
 
   # Purpose: binds quarantine to record test statuses
+  sig { void }
   def self.bind_record_tests
     ::RSpec.configure do |config|
       config.after(:each) do |example|
@@ -73,6 +83,7 @@ module Quarantine::RSpecAdapter # rubocop:disable Style/ClassAndModuleChildren
     end
   end
 
+  sig { void }
   def self.bind_upload_tests
     ::RSpec.configure do |config|
       config.after(:suite) do
@@ -82,6 +93,7 @@ module Quarantine::RSpecAdapter # rubocop:disable Style/ClassAndModuleChildren
   end
 
   # Purpose: binds quarantine logger to output test to RSpec formatter messages
+  sig { void }
   def self.bind_logger
     ::RSpec.configure do |config|
       config.after(:suite) do
