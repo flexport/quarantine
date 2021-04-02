@@ -19,7 +19,7 @@ module RSpec
 end
 
 class Quarantine
-  attr_reader :options, :quarantined_ids, :tests
+  attr_reader :options, :old_tests, :tests
 
   def self.bind_rspec
     RSpecAdapter.bind_rspec
@@ -27,7 +27,7 @@ class Quarantine
 
   def initialize(options)
     @options = options
-    @quarantined_ids = []
+    @old_tests = {}
     @tests = {}
     @database_failures = []
   end
@@ -58,11 +58,26 @@ class Quarantine
       )
     end
 
-    @quarantined_ids = test_statuses
-                       .group_by { |t| t['id'] }
-                       .map { |_id, tests| tests.max_by { |t| t['created_at'] } }
-                       .filter { |t| t['last_status'] == 'quarantined' }
-                       .map { |t| t['id'] }
+    pairs =
+      test_statuses
+      .group_by { |t| t['id'] }
+      .map { |_id, tests| tests.max_by { |t| t['created_at'] } }
+      .filter { |t| t['last_status'] == 'quarantined' }
+      .map do |t|
+        [
+          t['id'],
+          Quarantine::Test.new(
+            t['id'],
+            t['last_status'].to_sym,
+            t['consecutive_passes'],
+            t['full_description'],
+            t['location'],
+            t['extra_attributes']
+          )
+        ]
+      end
+
+    @old_tests = Hash[pairs]
   end
 
   def upload_tests
@@ -84,27 +99,28 @@ class Quarantine
 
   # Param: RSpec::Core::Example
   # Add the example to the internal tests list
-  def record_test(example, status)
-    extra_attributes = if options[:extra_attributes]
-                         options[:extra_attributes].call(example)
-                       else
-                         {}
-                       end
-    test = Quarantine::Test.new(example.id, status, example.full_description, example.location, extra_attributes)
+  def record_test(example, status, passed:)
+    extra_attributes = @options[:extra_attributes] ? @options[:extra_attributes].call(example) : {}
+
+    new_consecutive_passes = passed ? (@old_tests[example.id]&.consecutive_passes || 0) + 1 : 0
+    release_at = @options[:release_at_consecutive_passes]
+    new_status = !release_at.nil? && new_consecutive_passes >= release_at ? :passing : status
+    test = Quarantine::Test.new(
+      example.id,
+      new_status,
+      new_consecutive_passes,
+      example.full_description,
+      example.location,
+      extra_attributes
+    )
 
     tests[test.id] = test
   end
 
   # Param: RSpec::Core::Example
-  # Clear exceptions on a flaky tests that has been quarantined
-  def pass_flaky_test(example)
-    example.clear_exception!
-  end
-
-  # Param: RSpec::Core::Example
-  # Check the internal quarantined_ids to see if this test should be quarantined
+  # Check the internal old_tests to see if this test should be quarantined
   def test_quarantined?(example)
-    quarantined_ids.include?(example.id)
+    old_tests[example.id]&.status == :quarantined
   end
 
   def summary
