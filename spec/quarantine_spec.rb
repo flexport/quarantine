@@ -72,7 +72,7 @@ describe Quarantine do
     let(:quarantine) { Quarantine.new(options) }
 
     it 'adds a new flaky test to @tests' do |example|
-      quarantine.record_test(example, :quarantined, true)
+      quarantine.record_test(example, :quarantined, passed: true)
 
       expect(quarantine.tests.length).to eq(1)
       expect(quarantine.tests[example.id].id).to eq(example.id)
@@ -84,7 +84,7 @@ describe Quarantine do
     end
 
     it 'adds a new failed test to @tests' do |example|
-      quarantine.record_test(example, :quarantined, false)
+      quarantine.record_test(example, :quarantined, passed: false)
 
       expect(quarantine.tests.length).to eq(1)
       expect(quarantine.tests[example.id].id).to eq(example.id)
@@ -109,7 +109,7 @@ describe Quarantine do
           }]
         )
 
-        quarantine.record_test(example, :quarantined, true)
+        quarantine.record_test(example, :quarantined, passed: true)
 
         expect(quarantine.tests.length).to eq(1)
         expect(quarantine.tests[example.id].id).to eq(example.id)
@@ -133,7 +133,7 @@ describe Quarantine do
             }]
           )
 
-          quarantine.record_test(example, :quarantined, true)
+          quarantine.record_test(example, :quarantined, passed: true)
 
           expect(quarantine.tests.length).to eq(1)
           expect(quarantine.tests[example.id].id).to eq(example.id)
@@ -147,7 +147,7 @@ describe Quarantine do
       let(:options) { { database: database_options, extra_attributes: proc { { build_number: 5 } } } }
 
       it 'adds a new flaky test to @tests' do |example|
-        quarantine.record_test(example, :quarantined, true)
+        quarantine.record_test(example, :quarantined, passed: true)
 
         expect(quarantine.tests.length).to eq(1)
         expect(quarantine.tests[example.id].id).to eq(example.id)
@@ -166,7 +166,7 @@ describe Quarantine do
     let(:failsafe_limit) { 10 }
 
     it 'uploads with a test' do |example|
-      quarantine.record_test(example, :quarantined, true)
+      quarantine.record_test(example, :quarantined, passed: true)
       expect(quarantine.database).to receive(:batch_write_item)
       quarantine.upload_tests
     end
@@ -180,7 +180,7 @@ describe Quarantine do
       let(:failsafe_limit) { 1 }
 
       it "doesn't upload" do |example|
-        quarantine.record_test(example, :quarantined, true)
+        quarantine.record_test(example, :quarantined, passed: true)
         expect(quarantine.database).to_not receive(:batch_write_item)
         quarantine.upload_tests
       end
