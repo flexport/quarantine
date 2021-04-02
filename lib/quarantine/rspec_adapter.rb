@@ -56,18 +56,18 @@ module Quarantine::RSpecAdapter # rubocop:disable Style/ClassAndModuleChildren
             # will record the failed test if it's final retry from the rspec-retry gem
             if RSpec.configuration.skip_quarantined_tests && quarantined
               example.clear_exception!
-              Quarantine::RSpecAdapter.quarantine.record_test(example, :quarantined, false)
+              Quarantine::RSpecAdapter.quarantine.record_test(example, :quarantined, passed: false)
             else
-              Quarantine::RSpecAdapter.quarantine.record_test(example, :failing, false)
+              Quarantine::RSpecAdapter.quarantine.record_test(example, :failing, passed: false)
             end
           end
         elsif metadata[:retry_attempts] > 0
           # will record the flaky test if it failed the first run but passed a subsequent run
-          Quarantine::RSpecAdapter.quarantine.record_test(example, :quarantined, false)
+          Quarantine::RSpecAdapter.quarantine.record_test(example, :quarantined, passed: false)
         elsif quarantined
-          Quarantine::RSpecAdapter.quarantine.record_test(example, :quarantined, true)
+          Quarantine::RSpecAdapter.quarantine.record_test(example, :quarantined, passed: true)
         else
-          Quarantine::RSpecAdapter.quarantine.record_test(example, :passing, true)
+          Quarantine::RSpecAdapter.quarantine.record_test(example, :passing, passed: true)
         end
       end
     end

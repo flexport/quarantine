@@ -99,15 +99,11 @@ class Quarantine
 
   # Param: RSpec::Core::Example
   # Add the example to the internal tests list
-  def record_test(example, status, passed)
-    extra_attributes = if options[:extra_attributes]
-                         options[:extra_attributes].call(example)
-                       else
-                         {}
-                       end
+  def record_test(example, status, passed:)
+    extra_attributes = @options[:extra_attributes] ? @options[:extra_attributes].call(example) : {}
 
-    new_consecutive_passes = passed ? (old_tests[example.id]&.consecutive_passes || 0) + 1 : 0
-    release_at = options[:release_at_consecutive_passes]
+    new_consecutive_passes = passed ? (@old_tests[example.id]&.consecutive_passes || 0) + 1 : 0
+    release_at = @options[:release_at_consecutive_passes]
     new_status = !release_at.nil? && new_consecutive_passes >= release_at ? :passing : status
     test = Quarantine::Test.new(
       example.id,
