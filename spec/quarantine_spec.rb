@@ -40,7 +40,7 @@ describe Quarantine do
     let(:stub_multiple_tests) { dynamodb.stub_data(:scan, { items: [test1, test2] }) }
 
     it 'correctly stores quarantined tests pulled from DynamoDB' do
-      expect(quarantine.database).to receive(:scan).and_return([test1, test2])
+      expect(quarantine.database).to receive(:fetch_items).and_return([test1, test2])
 
       quarantine.fetch_test_statuses
 
@@ -63,7 +63,7 @@ describe Quarantine do
   end
 
   def set_up_test_statuses(quarantine, tests)
-    expect(quarantine.database).to receive(:scan).and_return(tests)
+    expect(quarantine.database).to receive(:fetch_items).and_return(tests)
 
     quarantine.fetch_test_statuses
   end
@@ -167,12 +167,12 @@ describe Quarantine do
 
     it 'uploads with a test' do |example|
       quarantine.record_test(example, :quarantined, passed: true)
-      expect(quarantine.database).to receive(:batch_write_item)
+      expect(quarantine.database).to receive(:write_items)
       quarantine.upload_tests
     end
 
     it "doesn't upload with no tests" do |_example|
-      expect(quarantine.database).to_not receive(:batch_write_item)
+      expect(quarantine.database).to_not receive(:write_items)
       quarantine.upload_tests
     end
 
@@ -181,7 +181,7 @@ describe Quarantine do
 
       it "doesn't upload" do |example|
         quarantine.record_test(example, :quarantined, passed: true)
-        expect(quarantine.database).to_not receive(:batch_write_item)
+        expect(quarantine.database).to_not receive(:write_items)
         quarantine.upload_tests
       end
     end

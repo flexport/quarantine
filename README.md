@@ -47,7 +47,21 @@ RSpec.configure do |config|
   config.around(:each) do |ex|
     ex.run_with_retry(retry: 3)
   end
+end
+```
 
+The following database types are currently supported:
+- `:dynamodb`
+
+To use a custom database, subclass `Quarantine::Databases::Base` and pass an instance of your class as the `quarantine_database` setting:
+
+```rb
+class MyDatabase < Quarantine::Databases::Base
+  ...
+end
+
+RSpec.configure do |config|
+  config.quarantine_database = MyDatabase.new(...)
 end
 ```
 
