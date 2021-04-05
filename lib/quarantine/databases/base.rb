@@ -25,7 +25,7 @@ class Quarantine
       sig do
         abstract.params(
           table_name: String,
-          items: T::Array[Item],
+          items: T::Array[Item]
         ).void
       end
       def write_items(table_name, items); end

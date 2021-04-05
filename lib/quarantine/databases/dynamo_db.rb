@@ -35,7 +35,7 @@ class Quarantine
       sig do
         override.params(
           table_name: String,
-          items: T::Array[Item],
+          items: T::Array[Item]
         ).void
       end
       def write_items(table_name, items)
@@ -44,7 +44,7 @@ class Quarantine
             table_name => items.map do |item|
               {
                 put_request: {
-                  item: item,
+                  item: item
                 }
               }
             end
