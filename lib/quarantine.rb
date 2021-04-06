@@ -50,14 +50,19 @@ class Quarantine
 
   sig { returns(Quarantine::Databases::Base) }
   def database
-    database_options = @options[:database].dup
-    type = database_options.delete(:type)
-    @database ||= \
-      case type
-      when :dynamodb
-        Quarantine::Databases::DynamoDB.new(database_options)
+    @database ||=
+      case @options[:database]
+      when Quarantine::Databases::Base
+        @options[:database]
       else
-        raise Quarantine::UnsupportedDatabaseError.new("Quarantine does not support database type: #{type.inspect}")
+        database_options = @options[:database].dup
+        type = database_options.delete(:type)
+        case type
+        when :dynamodb
+          Quarantine::Databases::DynamoDB.new(database_options)
+        else
+          raise Quarantine::UnsupportedDatabaseError.new("Quarantine does not support database type: #{type.inspect}")
+        end
       end
   end
 
@@ -65,7 +70,7 @@ class Quarantine
   sig { void }
   def fetch_test_statuses
     begin
-      test_statuses = database.scan(@options[:test_statuses_table_name])
+      test_statuses = database.fetch_items(@options[:test_statuses_table_name])
     rescue Quarantine::DatabaseError => e
       @database_failures << "#{e.cause&.class}: #{e.cause&.message}"
       raise Quarantine::DatabaseError.new(
@@ -105,12 +110,9 @@ class Quarantine
 
     begin
       timestamp = Time.now.to_i / 1000 # Truncated millisecond from timestamp for reasons specific to Flexport
-      database.batch_write_item(
+      database.write_items(
         @options[:test_statuses_table_name],
-        @tests.values.map(&:to_hash),
-        {
-          updated_at: timestamp
-        }
+        @tests.values.map { |item| item.to_hash.merge(updated_at: timestamp) }
       )
     rescue Quarantine::DatabaseError => e
       @database_failures << "#{e.cause&.class}: #{e.cause&.message}"

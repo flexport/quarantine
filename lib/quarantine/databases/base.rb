@@ -20,16 +20,15 @@ class Quarantine
       end
 
       sig { abstract.params(table_name: String).returns(T::Enumerable[Item]) }
-      def scan(table_name); end
+      def fetch_items(table_name); end
 
       sig do
         abstract.params(
           table_name: String,
-          items: T::Array[Item],
-          additional_attributes: T::Hash[T.untyped, T.untyped]
+          items: T::Array[Item]
         ).void
       end
-      def batch_write_item(table_name, items, additional_attributes); end
+      def write_items(table_name, items); end
     end
   end
 end

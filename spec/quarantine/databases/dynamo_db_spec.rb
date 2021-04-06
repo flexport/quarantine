@@ -2,7 +2,7 @@
 require 'spec_helper'
 
 describe Quarantine::Databases::DynamoDB do
-  context '#scan' do
+  context '#fetch_items' do
     test1 = {
       'full_description' => 'quarantined_test_1',
       'id' => '1',
@@ -27,12 +27,12 @@ describe Quarantine::Databases::DynamoDB do
 
     it 'is called with the correct table name' do
       expect(database.dynamodb).to receive(:scan).with(table_name: 'foo').and_return(OpenStruct.new(items: [])).once
-      database.scan('foo')
+      database.fetch_items('foo')
     end
 
     it 'returns all items queried in the scan' do
       database.dynamodb.stub_responses(:scan, stub_multiple_tests)
-      items = database.scan('foo')
+      items = database.fetch_items('foo')
 
       expect(items.length).to eq(2)
       expect(items[0]['id']).to eq('1')
@@ -49,11 +49,11 @@ describe Quarantine::Databases::DynamoDB do
     it 'throws exception Quarantine::DatabaseError on AWS errors' do
       error = Aws::DynamoDB::Errors::TableNotFoundException.new(Quarantine, 'table not found')
       expect(database.dynamodb).to receive(:scan).and_raise(error)
-      expect { database.scan('foo') }.to raise_error(Quarantine::DatabaseError)
+      expect { database.fetch_items('foo') }.to raise_error(Quarantine::DatabaseError)
     end
   end
 
-  context '#batch_write_item' do
+  context '#write_items' do
     item1 = Quarantine::Test.new(
       id: '1',
       status: :quarantined,
@@ -73,7 +73,6 @@ describe Quarantine::Databases::DynamoDB do
 
     let(:database) { Quarantine::Databases::DynamoDB.new(region: 'us-west-1', stub_responses: true) }
     let(:items) { [item1, item2] }
-    let(:additional_attributes) { { a: 'a', b: 'b' } }
 
     it 'has arguments splatted correctly' do
       result = {
@@ -81,12 +80,12 @@ describe Quarantine::Databases::DynamoDB do
           'foo' => [
             {
               put_request: {
-                item: item1.to_hash.merge(additional_attributes)
+                item: item1.to_hash
               }
             },
             {
               put_request: {
-                item: item2.to_hash.merge(additional_attributes)
+                item: item2.to_hash
               }
             }
           ]
@@ -95,7 +94,7 @@ describe Quarantine::Databases::DynamoDB do
 
       expect(database.dynamodb).to receive(:batch_write_item).with(result).once
 
-      database.batch_write_item('foo', items, additional_attributes)
+      database.write_items('foo', items.map(&:to_hash))
     end
 
     it 'throws exception Quarantine::DatabaseError on AWS errors' do
@@ -111,11 +110,11 @@ describe Quarantine::Databases::DynamoDB do
       ]
       error = Aws::DynamoDB::Errors::LimitExceededException.new(Quarantine, 'limit exceeded')
       expect(database.dynamodb).to receive(:batch_write_item).and_raise(error)
-      expect { database.batch_write_item('foo', items) }.to raise_error(Quarantine::DatabaseError)
+      expect { database.write_items('foo', items.map(&:to_hash)) }.to raise_error(Quarantine::DatabaseError)
     end
   end
 
-  context '#delete_item' do
+  context '#delete_items' do
     let(:database) { Quarantine::Databases::DynamoDB.new(region: 'us-west-1') }
 
     it 'has arguments splatted correctly' do
@@ -125,13 +124,13 @@ describe Quarantine::Databases::DynamoDB do
       }
       expect(database.dynamodb).to receive(:delete_item).with(result)
 
-      database.delete_item('foo', id: '1')
+      database.delete_items('foo', id: '1')
     end
 
     it 'throws exception Quarantine::DatabaseError on AWS errors' do
       error = Aws::DynamoDB::Errors::IndexNotFoundException.new(Quarantine, 'index not found')
       expect(database.dynamodb).to receive(:delete_item).and_raise(error)
-      expect { database.delete_item('foo', id: '1') }.to raise_error(Quarantine::DatabaseError)
+      expect { database.delete_items('foo', id: '1') }.to raise_error(Quarantine::DatabaseError)
     end
   end
 

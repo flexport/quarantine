@@ -34,7 +34,7 @@ class JiraController < ApplicationController
         quarantined_test = result.items[0]
 
         # unquarantined the test related to the ticket
-        dynamodb.delete_item(
+        dynamodb.delete_items(
           { table_name: 'quarantine_list',
             key: {
               id: quarantined_test['id'],
