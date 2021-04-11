@@ -3,6 +3,7 @@ source 'https://rubygems.org'
 gemspec
 
 group :test do
+  gem 'aws-sdk-dynamodb', '~> 1'
   gem 'rubocop', require: false
   gem 'rubocop-rails', require: false
   gem 'rubocop-sorbet', require: false

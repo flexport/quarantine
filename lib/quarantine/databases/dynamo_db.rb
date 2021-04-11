@@ -1,6 +1,9 @@
 # typed: strict
 
-require 'aws-sdk-dynamodb'
+begin
+  require 'aws-sdk-dynamodb'
+rescue LoadError
+end
 require 'quarantine/databases/base'
 require 'quarantine/error'
 
