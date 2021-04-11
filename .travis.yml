@@ -9,5 +9,6 @@ install:
   - gem install bundler
   - bundle install
 script:
-  - bundle exec rspec
+  - srb typecheck
   - bundle exec rubocop
+  - bundle exec rspec

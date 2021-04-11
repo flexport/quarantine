@@ -11,7 +11,7 @@ Gem::Specification.new do |s|
   s.version = Quarantine::VERSION
   s.authors = ['Flexport Engineering, Eric Zhu']
   s.email = ['ericzhu77@gmail.com']
-  s.summary = 'Quarantine flaky Ruby Rspec tests'
+  s.summary = 'Quarantine flaky RSpec tests'
   s.homepage = 'https://github.com/flexport/quarantine'
   s.license = 'MIT'
   s.files = Dir['{lib, bin}/**/*', '*.md', '*.gemspec']
