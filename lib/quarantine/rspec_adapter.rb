@@ -7,7 +7,7 @@ module Quarantine::RSpecAdapter # rubocop:disable Style/ClassAndModuleChildren
   #          about the test suite (ie. quarantined tests) and binds RSpec configurations
   #          and hooks onto the global RSpec class
   sig { void }
-  def self.bind_rspec
+  def self.bind
     bind_rspec_configurations
     bind_fetch_test_statuses
     bind_record_tests

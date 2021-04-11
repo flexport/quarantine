@@ -28,11 +28,6 @@ end
 class Quarantine
   extend T::Sig
 
-  sig { void }
-  def self.bind_rspec
-    RSpecAdapter.bind_rspec
-  end
-
   sig { returns(T::Hash[String, Quarantine::Test]) }
   attr_reader :tests
 
