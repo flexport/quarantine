@@ -1,26 +1,18 @@
 # Quarantine
+
 [![Build Status](https://travis-ci.com/flexport/quarantine.svg?branch=master)](https://travis-ci.com/flexport/quarantine)
 
-Quarantine provides a run-time solution to diagnosing and disabling flaky tests and automates the workflow around test suite maintenance.
+Quarantine automatically detects flaky tests (i.e. those which fail non-deterministically) and disables them until they're proven reliable.
 
-The quarantine gem supports testing frameworks:
+Quarantine current supports the following testing frameworks. If you need an additional one, please file an issue or open a pull request.
 - [RSpec](http://rspec.info/)
 
-The quarantine gem supports any CI pipeline.
+Quarantine should provide the necessary hooks for compatibility with any CI solution. If it's insufficient for yours, please file an issue or open a pull request.
 
-If you are interested in using quarantine but it does not support your CI or testing framework, feel free to reach out or create an issue and we can try to make it happen.
+## Getting started
 
-## Purpose
-Flaky tests impact engineering velocity, reduce faith in test reliablity and give a false representation of code coverage. Managing flaky tests is a clunky process that involves constant build monitorization, difficult diagnosis and manual ticket creation. As a result, here at Flexport, we have created a Gem to automate the entire process to help improve the workflow and keep our massive test suites in pristine condition.
+Quarantine works in tandem with [RSpec::Retry](https://github.com/NoRedInk/rspec-retry). Add this to your `Gemfile` and run `bundle install`:
 
-The workflow at Flexport involves:
-
-![ideal workflow](misc/flexport_workflow.png)
-
----
-## Installation and Setup
-
-Add these lines to your application's Gemfile:
 ```rb
 group :test do
   gem 'quarantine'
@@ -28,32 +20,87 @@ group :test do
 end
 ```
 
-And then execute:
-```sh
-bundle install
-```
+In your `spec_helper.rb`, set up Quarantine and RSpec::Retry. See [RSpec::Retry](https://github.com/NoRedInk/rspec-retry)'s documentation for details of its configuration.
 
-In your `spec_helper.rb` setup quarantine and rspec-retry gem. Click [rspec-retry](https://github.com/NoRedInk/rspec-retry) to get a more detailed explaination on rspec-retry configurations and how to setup.
 ```rb
 require 'quarantine'
-require 'rspec-retry'
+require 'rspec/retry'
 
-Quarantine.bind_rspec
+Quarantine::RSpecAdapter.bind
 
 RSpec.configure do |config|
-  # Also accepts `credentials` to override the standard AWS credential chain
+  # Also accepts `:credentials` to override the standard AWS credential chain
   config.quarantine_database = {type: :dynamodb, region: 'us-west-1'}
+  # Prevent the list of flaky tests from being polluted by local development and PRs
+  config.quarantine_record_tests = ENV["CI"] && ENV["BRANCH"] == "master"
 
-  config.around(:each) do |ex|
-    ex.run_with_retry(retry: 3)
+  config.around(:each) do |example|
+    example.run_with_retry(retry: 3)
   end
 end
 ```
 
-The following database types are currently supported:
+Quarantine comes with a CLI tool for setting up the necessary table in DynamoDB, if you use that database.
+
+```sh
+bundle exec quarantine_dynamodb -h    # See all options
+
+bundle exec quarantine_dynamodb \     # Create the "test_statuses" table in us-west-1 in AWS DynamoDB
+  --region us-west-1
+```
+
+## How It Works
+
+A flaky test fails on the first run, but passes after being retried via RSpec::Retry.
+
+```rb
+require "spec_helper"
+
+describe Quarantine do
+  it "fails on the first run" do
+    raise "error" if RSpec.current_example.attempts == 0
+    # otherwise, pass
+  end
+end
+```
+
+```sh
+$ CI=1 BRANCH=master bundle exec rspec <filename>
+[quarantine] Quarantined tests:
+  ./bar_spec.rb[1:1] Quarantine fails on the first run
+```
+
+When the build completes, all test statuses are written to the database. Flaky tests are marked `quarantined`, and will be executed in future builds, but any failures will be ignored.
+
+A test can be removed from quarantine by updating the database manually (outside this gem), or by configuring `quarantine_release_at_consecutive_passes` to remove it after it passes on a certain number of builds in a row.
+
+## Configuration
+
+In `spec_helper.rb`, you can set configuration variables by doing:
+
+```rb
+RSpec.configure do |config|
+  config.VAR_NAME = VALUE
+end
+```
+
+- `quarantine_database`: Database configuration (see below), default: `{ type: :dynamodb, region: 'us-west-1' }`
+- `test_statusus_table`: Table name for test statuses, default: `"test_statuses"`
+- `skip_quarantined_tests`: Skipping quarantined tests during test runs default: `true`
+- `quarantine_record_tests`: Recording test statuses, default: `true`
+- `quarantine_logging`: Outputting quarantined gem info, default: `true`
+- `quarantine_extra_attributes`: Storing custom per-example attributes in the table, default: `nil`
+- `quarantine_failsafe_limit`: A failsafe limit of quarantined tests in a single run, default: `10`
+- `quarantine_release_at_consecutive_passes`: Releasing a test from quarantine after it records enough consecutive passes (`nil` to disable this feature), default: `nil`
+
+### Databases
+
+Quarantine comes with built-in support for the following database types:
 - `:dynamodb`
 
-To use a custom database, subclass `Quarantine::Databases::Base` and pass an instance of your class as the `quarantine_database` setting:
+To use `:dynamodb`, be sure to add `gem 'aws-sdk-dynamodb', '~> 1', group: :test` to your `Gemfile`.
+
+To use a custom database that's not provided, subclass `Quarantine::Databases::Base` and pass an instance of your class as the `quarantine_database` setting:
 
 ```rb
 class MyDatabase < Quarantine::Databases::Base
@@ -65,116 +112,41 @@ RSpec.configure do |config|
 end
 ```
 
-Consider wrapping `Quarantine.bind` in if statements so local flaky tests don't pollute the list of quarantined tests
+### Extra attributes
+
+Use `quarantine_extra_attributes` to store custom data with each test in the database, e.g. variables useful for your CI setup.
 
 ```rb
-if ENV[CI] && ENV[BRANCH] == "master"
-  Quarantine.bind_rspec
-end
+ config.quarantine_extra_attributes = Proc.new do |example|
+   {
+     build_url: ENV['BUILDKITE_BUILD_URL'],
+     job_id: ENV['BUILDKITE_JOB_ID'],
+   }
+ end
 ```
 
-Setup tables in AWS DynamoDB to support pulling and uploading quarantined tests
-```sh
-bundle exec quarantine_dynamodb -h    # see all options
-
-bundle exec quarantine_dynamodb \     # create the tables in us-west-1 in aws dynamodb
-  --region us-west-1                  # with "test_statuses" table name
-```
-
-You are all set to start quarantining tests!
-
-## Try Quarantining Tests Locally
-Add a test that will flake
-```rb
-require "spec_helper"
-
-describe Quarantine do
-  it "this test should flake 33% of the time" do
-    expect(Random.rand(3)).to eq(1)
-  end
-end
-```
-
-Run `rspec` on the test
-```sh
-CI=1 BRANCH=master rspec <filename>
-```
-
-All tests statuses are stored in DynamoDB. If the test fails and passes on the test run (i.e. rspec-retry re-ran the
-test), then test's status is `quarantined`. Check the `test_statuses` table in DynamoDB.
-
-## Configuration
-
-Go to `spec/spec_helper.rb` and set configuration variables through:
-```rb
-RSpec.configure do |config|
-    config.VAR_NAME = VALUE
-end
-```
-- Table name for test statuses `:test_statuses_table, default: "test_statuses"`
-
-- Skipping quarantined tests during test runs `:skip_quarantined_tests, default: true`
-
-- Recording test statuses `:quarantine_record_tests, default: true`
-
-- Outputting quarantined gem info `:quarantine_logging, default: true`
-
-- Storing custom per-example attributes in the table `:quarantine_extra_attributes, default: ->(example) { {} }`
-
-- A failsafe limit of quarantined tests in a single run `:quarantine_failsafe_limit, default: 10`
-
-- Releasing a test from quarantine after it records enough consecutive passes (`nil` to disable this feature) `:quarantine_release_at_consecutive_passes, default: nil`
-
----
-## Setup Jira Workflow
-
-```rb
-RSpec.configure do |config|
-  # Store Buildkite build number alongside test in database tables
-  config.extra_attributes = ->(example) { {
-    build_number: ENV['BUILDKITE_BUILD_NUMBER'] || '-1',
-  } }
-```
-
-To automatically create Jira tickets, take a look at: `examples/create_tickets.rb`
-
-To automatically unquarantine tests on Jira ticket completion, take a look at: `examples/unquarantine.rb`
-
----
-## Contributing
-1. Create an issue regarding a bug fix or feature request
-2. Fork the repository
-3. Create your feature branch, commit changes and create a pull request
-
-## Contributors
-- [Eric Zhu](https://github.com/eric-zhu-uw)
-- [Kevin Miller](https://github.com/Gasparila)
-- [Nicholas Silva](https://github.com/flexportnes)
-- [Ankur Dahiya](https://github.com/legalosLOTR)
 ---
 
 ## FAQs
 
 #### Why are quarantined tests not being skipped locally?
 
-The `quarantine` gem may be configured to only run on certain environments. Make sure you pass all these `ENV` variables to `rspec` when you call it locally
+Quarantine may be configured to only run in certain environments. Check your `spec_helper.rb`, and make sure you have all necessary environment variables set, e.g.:
 
 ```sh
-CI="1" BRANCH="master" rspec
+CI=1 BRANCH=master bundle exec rspec
 ```
 
-#### Why is dynamodb failing to connect?
+#### Why is Quarantine failing to connect to DynamoDB?
 
-The AWS client loads credentials from the following locations (in order of precedence):
+The AWS client attempts to loads credentials from the following locations, in order:
 - The optional `credentials` field in `RSpec.configuration.quarantine_database`
 - `ENV['AWS_ACCESS_KEY_ID']` and `ENV['AWS_SECRET_ACCESS_KEY']`
 - `Aws.config[:credentials]`
 - The shared credentials ini file at `~/.aws/credentials`
 
-To get AWS credentials, please contact your AWS administrator to get access to dynamodb and create your credentials through IAM.
-
-More detailed information can be found: [AWS documentation](https://docs.aws.amazon.com/sdkforruby/api/Aws/S3/Client.html)
+More detailed information can be found in the [AWS SDK documentation](https://docs.aws.amazon.com/sdkforruby/api/Aws/S3/Client.html)
 
 #### Why is `example.clear_exception` failing locally?
 
- `example.clear_exception` is an attribute added through `rspec_retry`. Make sure `rspec-retry` has been installed and configured.
+`Example#clear_exception` is an attribute added through [RSpec::Retry](https://github.com/NoRedInk/rspec-retry). Make sure it has been installed and configured.
