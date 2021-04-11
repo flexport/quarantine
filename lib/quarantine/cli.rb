@@ -14,9 +14,11 @@ class Quarantine
     sig { void }
     def initialize
       # default options
-      @options = T.let({
-                         test_statuses_table_name: 'test_statuses'
-                       }, T::Hash[Symbol, T.untyped])
+      @options = T.let(
+        {
+          test_statuses_table_name: 'test_statuses'
+        }, T::Hash[Symbol, T.untyped]
+      )
     end
 
     sig { void }

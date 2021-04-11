@@ -88,7 +88,7 @@ class Quarantine
           Quarantine::Test.new(
             id: t['id'],
             status: t['last_status'].to_sym,
-            consecutive_passes: t['consecutive_passes'],
+            consecutive_passes: t['consecutive_passes'].to_i,
             full_description: t['full_description'],
             location: t['location'],
             extra_attributes: t['extra_attributes']
@@ -144,13 +144,13 @@ class Quarantine
 
   sig { returns(String) }
   def summary
-    quarantined_tests = @tests.values.select{|test| test.status == :quarantined}.sort_by(&:id)
-    <<~END
+    quarantined_tests = @tests.values.select { |test| test.status == :quarantined }.sort_by(&:id)
+    <<~MESSAGE
       \n[quarantine] Quarantined tests:
-        #{quarantined_tests.map{|test| "#{test.id} #{test.full_description}"}.join("\n  ")}
+        #{quarantined_tests.map { |test| "#{test.id} #{test.full_description}" }.join("\n  ")}
 
       [quarantine] Database errors:
         #{@database_failures.join("\n  ")}
-    END
+    MESSAGE
   end
 end
