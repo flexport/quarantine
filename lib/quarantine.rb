@@ -147,12 +147,15 @@ class Quarantine
     @old_tests[example.id]&.status == :quarantined
   end
 
-  sig { returns(T::Hash[T.untyped, T.untyped]) }
+  sig { returns(String) }
   def summary
-    {
-      id: 'quarantine',
-      tests: @tests.transform_values(&:status),
-      database_failures: @database_failures
-    }
+    quarantined_tests = @tests.values.select{|test| test.status == :quarantined}.sort_by(&:id)
+    <<~END
+      \n[quarantine] Quarantined tests:
+        #{quarantined_tests.map{|test| "#{test.id} #{test.full_description}"}.join("\n  ")}
+
+      [quarantine] Database errors:
+        #{@database_failures.join("\n  ")}
+    END
   end
 end

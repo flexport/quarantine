@@ -55,8 +55,7 @@ describe Quarantine do
 
       expect { quarantine.fetch_test_statuses }.to raise_error(Quarantine::DatabaseError)
 
-      expect(quarantine.summary[:database_failures].length).to eq(1)
-      expect(quarantine.summary[:database_failures][0]).to eq(
+      expect(quarantine.summary).to include(
         'Aws::DynamoDB::Errors::LimitExceededException: limit exceeded'
       )
     end
