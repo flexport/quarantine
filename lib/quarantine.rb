@@ -7,6 +7,7 @@ require 'quarantine/rspec_adapter'
 require 'quarantine/test'
 require 'quarantine/databases/base'
 require 'quarantine/databases/dynamo_db'
+require 'quarantine/databases/google_sheets'
 
 module RSpec
   module Core
@@ -55,6 +56,8 @@ class Quarantine
         case type
         when :dynamodb
           Quarantine::Databases::DynamoDB.new(database_options)
+        when :google_sheets
+          Quarantine::Databases::GoogleSheets.new(database_options)
         else
           raise Quarantine::UnsupportedDatabaseError.new("Quarantine does not support database type: #{type.inspect}")
         end

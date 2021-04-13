@@ -57,18 +57,6 @@ class Quarantine
         raise Quarantine::DatabaseError
       end
 
-      sig { params(table_name: String, keys: T::Hash[T.untyped, T.untyped]).void }
-      def delete_items(table_name, keys)
-        @dynamodb.delete_item(
-          table_name: table_name,
-          key: {
-            **keys
-          }
-        )
-      rescue Aws::DynamoDB::Errors::ServiceError
-        raise Quarantine::DatabaseError
-      end
-
       sig do
         params(
           table_name: String,
