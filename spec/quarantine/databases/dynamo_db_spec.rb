@@ -114,26 +114,6 @@ describe Quarantine::Databases::DynamoDB do
     end
   end
 
-  context '#delete_items' do
-    let(:database) { Quarantine::Databases::DynamoDB.new(region: 'us-west-1') }
-
-    it 'has arguments splatted correctly' do
-      result = {
-        table_name: 'foo',
-        key: { id: '1' }
-      }
-      expect(database.dynamodb).to receive(:delete_item).with(result)
-
-      database.delete_items('foo', id: '1')
-    end
-
-    it 'throws exception Quarantine::DatabaseError on AWS errors' do
-      error = Aws::DynamoDB::Errors::IndexNotFoundException.new(Quarantine, 'index not found')
-      expect(database.dynamodb).to receive(:delete_item).and_raise(error)
-      expect { database.delete_items('foo', id: '1') }.to raise_error(Quarantine::DatabaseError)
-    end
-  end
-
   context '#create_table' do
     let(:database) { Quarantine::Databases::DynamoDB.new(region: 'us-west-1') }
 

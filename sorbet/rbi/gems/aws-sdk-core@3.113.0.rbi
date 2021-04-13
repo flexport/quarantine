@@ -327,6 +327,42 @@ module Aws::Deprecations
   def deprecated(method, options = T.unsafe(nil)); end
 end
 
+class Aws::EC2Metadata
+  def initialize(options = T.unsafe(nil)); end
+
+  def get(path); end
+
+  private
+
+  def backoff(backoff); end
+  def fetch_token; end
+  def http_get(connection, path, token); end
+  def http_put(connection, ttl); end
+  def open_connection; end
+  def retry_errors(options = T.unsafe(nil), &_block); end
+end
+
+Aws::EC2Metadata::METADATA_TOKEN_PATH = T.let(T.unsafe(nil), String)
+
+class Aws::EC2Metadata::MetadataNotFoundError < ::RuntimeError
+end
+
+class Aws::EC2Metadata::RequestForbiddenError < ::RuntimeError
+end
+
+class Aws::EC2Metadata::Token
+  def initialize(options = T.unsafe(nil)); end
+
+  def expired?; end
+  def value; end
+end
+
+class Aws::EC2Metadata::TokenExpiredError < ::RuntimeError
+end
+
+class Aws::EC2Metadata::TokenRetrievalError < ::RuntimeError
+end
+
 class Aws::ECSCredentials
   include(::Aws::CredentialProvider)
   include(::Aws::RefreshingCredentials)
@@ -2622,6 +2658,20 @@ class Aws::Xml::Parser::MapFrame < ::Aws::Xml::Parser::Frame
   def consume_child_frame(child); end
 end
 
+class Aws::Xml::Parser::NokogiriEngine
+  def initialize(stack); end
+
+  def characters(chars); end
+  def comment(*args); end
+  def end_document; end
+  def end_element_namespace(*ignored); end
+  def error(msg); end
+  def parse(xml); end
+  def start_document; end
+  def start_element_namespace(element_name, attributes = T.unsafe(nil), *ignored); end
+  def xmldecl(*args); end
+end
+
 class Aws::Xml::Parser::NullFrame < ::Aws::Xml::Parser::Frame
   def set_text(value); end
 
@@ -2635,17 +2685,6 @@ class Aws::Xml::Parser::ParsingError < ::RuntimeError
 
   def column; end
   def line; end
-end
-
-class Aws::Xml::Parser::RexmlEngine
-  include(::REXML::StreamListener)
-
-  def initialize(stack); end
-
-  def parse(xml); end
-  def tag_end(name); end
-  def tag_start(name, attrs); end
-  def text(value); end
 end
 
 class Aws::Xml::Parser::Stack

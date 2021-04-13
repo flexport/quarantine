@@ -8,16 +8,7 @@ class Quarantine
 
       abstract!
 
-      Item = T.type_alias do
-        {
-          'id' => String,
-          'last_status' => String,
-          'consecutive_passes' => Integer,
-          'full_description' => String,
-          'location' => String,
-          'extra_attributes' => T.untyped
-        }
-      end
+      Item = T.type_alias { T::Hash[String, T.untyped] } # TODO: must have `id` key
 
       sig { abstract.params(table_name: String).returns(T::Enumerable[Item]) }
       def fetch_items(table_name); end

@@ -97,8 +97,19 @@ end
 
 Quarantine comes with built-in support for the following database types:
 - `:dynamodb`
+- `:google_sheets`
 
 To use `:dynamodb`, be sure to add `gem 'aws-sdk-dynamodb', '~> 1', group: :test` to your `Gemfile`.
+
+To use `:google_sheets`, be sure to add `gem 'google_drive', '~> 2', group: :test` to your `Gemfile`. Here's an example:
+
+```rb
+config.quarantine_database = {
+  type: :google_sheets,
+  authorization: {type: :service_account_key, file: "service_account.json"}, # also accepts `type: :config`
+  spreadsheet: {type: :by_key, "1Jb5fC6wSuIMnP85tUR5knuZ4f5fuu4nMzQF6-0l-EXAMPLE"}, # also accepts `type: :by_title` and `type: :by_url`
+}
+```
 
 To use a custom database that's not provided, subclass `Quarantine::Databases::Base` and pass an instance of your class as the `quarantine_database` setting:
 

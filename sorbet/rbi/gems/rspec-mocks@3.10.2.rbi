@@ -1151,6 +1151,7 @@ class RSpec::Mocks::Proxy
   def as_null_object; end
   def build_expectation(method_name); end
   def check_for_unexpected_arguments(expectation); end
+  def ensure_can_be_proxied!(object); end
   def ensure_implemented(*_args); end
   def has_negative_expectation?(message); end
   def message_received(message, *args, &block); end

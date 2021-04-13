@@ -7,6 +7,7 @@ require 'quarantine/rspec_adapter'
 require 'quarantine/test'
 require 'quarantine/databases/base'
 require 'quarantine/databases/dynamo_db'
+require 'quarantine/databases/google_sheets'
 
 module RSpec
   module Core
@@ -55,6 +56,8 @@ class Quarantine
         case type
         when :dynamodb
           Quarantine::Databases::DynamoDB.new(database_options)
+        when :google_sheets
+          Quarantine::Databases::GoogleSheets.new(database_options)
         else
           raise Quarantine::UnsupportedDatabaseError.new("Quarantine does not support database type: #{type.inspect}")
         end
@@ -107,7 +110,7 @@ class Quarantine
       timestamp = Time.now.to_i / 1000 # Truncated millisecond from timestamp for reasons specific to Flexport
       database.write_items(
         @options[:test_statuses_table_name],
-        @tests.values.map { |item| item.to_hash.merge(updated_at: timestamp) }
+        @tests.values.map { |item| item.to_hash.merge('updated_at' => timestamp) }
       )
     rescue Quarantine::DatabaseError => e
       @database_failures << "#{e.cause&.class}: #{e.cause&.message}"
