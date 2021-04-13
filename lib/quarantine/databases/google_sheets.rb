@@ -31,7 +31,7 @@ class Quarantine
       end
       def write_items(table_name, items)
         worksheet = spreadsheet.worksheet_by_title(table_name)
-        headers = worksheet.rows.first
+        headers = worksheet.rows.first.reject(&:empty?)
         new_rows = []
 
         # Map existing ID to row index
