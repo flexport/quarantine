@@ -23,7 +23,8 @@ class Quarantine
         database: RSpec.configuration.quarantine_database,
         test_statuses_table_name: RSpec.configuration.quarantine_test_statuses,
         extra_attributes: RSpec.configuration.quarantine_extra_attributes,
-        failsafe_limit: RSpec.configuration.quarantine_failsafe_limit
+        failsafe_limit: RSpec.configuration.quarantine_failsafe_limit,
+        release_at_consecutive_passes: RSpec.configuration.quarantine_release_at_consecutive_passes,
       )
     end
 
