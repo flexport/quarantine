@@ -35,7 +35,8 @@ class Quarantine
         new_rows = []
 
         # Map existing ID to row index
-        indexes = Hash[parse_rows(worksheet).each_with_index.map { |item, idx| [item['id'], idx] }]
+        parsed_rows = parse_rows(worksheet)
+        indexes = Hash[parsed_rows.each_with_index.map { |item, idx| [item['id'], idx] }]
 
         items.each do |item|
           cells = headers.map { |header| item[header].to_s }
@@ -51,7 +52,7 @@ class Quarantine
         end
 
         # Insert any items whose IDs weren't found in existing rows at the end
-        worksheet.insert_rows(worksheet.rows.count + 1, new_rows)
+        worksheet.insert_rows(parsed_rows.count + 2, new_rows)
         worksheet.save
       end
 
@@ -98,9 +99,11 @@ class Quarantine
         rows.map do |row|
           hash_row = Hash[headers.zip(row)]
           # TODO: use Google Sheets developer metadata to store type information
-          hash_row['extra_attributes'] = JSON.parse(hash_row['extra_attributes']) if hash_row['extra_attributes']
-          hash_row
-        end
+          unless hash_row['id'].empty?
+            hash_row['extra_attributes'] = JSON.parse(hash_row['extra_attributes']) if hash_row['extra_attributes']
+            hash_row
+          end
+        end.compact
       end
     end
   end
