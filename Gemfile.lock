@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    quarantine (2.1.2)
+    quarantine (2.1.3)
       rspec (~> 3.0)
       rspec-retry (~> 0.6)
       sorbet-runtime (= 0.5.6338)
