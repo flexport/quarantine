@@ -21,7 +21,7 @@ class Quarantine
       sig { override.params(table_name: String).returns(T::Enumerable[Item]) }
       def fetch_items(table_name)
         parse_rows(spreadsheet.worksheet_by_title(table_name))
-      rescue GoogleDrive::Error
+      rescue GoogleDrive::Error, Google::Apis::Error
         raise Quarantine::DatabaseError
       end
 
@@ -56,7 +56,7 @@ class Quarantine
         # Insert any items whose IDs weren't found in existing rows at the end
         worksheet.insert_rows(parsed_rows.count + 2, new_rows)
         worksheet.save
-      rescue GoogleDrive::Error
+      rescue GoogleDrive::Error, Google::Apis::Error
         raise Quarantine::DatabaseError
       end
 

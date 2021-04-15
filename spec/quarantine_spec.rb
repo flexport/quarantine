@@ -12,11 +12,13 @@ describe Quarantine do
   let(:options) do
     {
       database: database_options,
-      test_statuses_table_name: 'foo'
+      test_statuses_table_name: 'foo',
+      logging: true,
+      log: ->(message) { puts message }
     }
   end
 
-  context '#fetch_test_statuses' do
+  context '#on_start' do
     test1 = {
       'full_description' => 'quarantined_test_1',
       'id' => '1',
@@ -42,7 +44,7 @@ describe Quarantine do
     it 'correctly stores quarantined tests pulled from DynamoDB' do
       expect(quarantine.database).to receive(:fetch_items).and_return([test1, test2])
 
-      quarantine.fetch_test_statuses
+      quarantine.on_start
 
       expect(quarantine.old_tests.size).to eq(2)
       expect(quarantine.old_tests.key?('1')).to eq(true)
@@ -53,25 +55,28 @@ describe Quarantine do
       error = Aws::DynamoDB::Errors::LimitExceededException.new(Quarantine, 'limit exceeded')
       expect(quarantine.database.dynamodb).to receive(:scan).and_raise(error)
 
-      expect { quarantine.fetch_test_statuses }.to raise_error(Quarantine::DatabaseError)
+      expect { quarantine.on_start }.to raise_error(Quarantine::DatabaseError)
 
-      expect(quarantine.summary).to include(
-        'Aws::DynamoDB::Errors::LimitExceededException: limit exceeded'
+      expect(options[:log]).to receive(:call)
+      expect(options[:log]).to receive(:call).with(
+        include('Aws::DynamoDB::Errors::LimitExceededException: limit exceeded')
       )
+
+      quarantine.on_complete
     end
   end
 
   def set_up_test_statuses(quarantine, tests)
     expect(quarantine.database).to receive(:fetch_items).and_return(tests)
 
-    quarantine.fetch_test_statuses
+    quarantine.on_start
   end
 
-  context '#record_test' do
+  context '#on_test' do
     let(:quarantine) { Quarantine.new(options) }
 
     it 'adds a new flaky test to @tests' do |example|
-      quarantine.record_test(example, :quarantined, passed: true)
+      quarantine.on_test(example, :quarantined, passed: true)
 
       expect(quarantine.tests.length).to eq(1)
       expect(quarantine.tests[example.id].id).to eq(example.id)
@@ -83,7 +88,7 @@ describe Quarantine do
     end
 
     it 'adds a new failed test to @tests' do |example|
-      quarantine.record_test(example, :quarantined, passed: false)
+      quarantine.on_test(example, :quarantined, passed: false)
 
       expect(quarantine.tests.length).to eq(1)
       expect(quarantine.tests[example.id].id).to eq(example.id)
@@ -108,7 +113,7 @@ describe Quarantine do
           }]
         )
 
-        quarantine.record_test(example, :quarantined, passed: true)
+        quarantine.on_test(example, :quarantined, passed: true)
 
         expect(quarantine.tests.length).to eq(1)
         expect(quarantine.tests[example.id].id).to eq(example.id)
@@ -132,7 +137,7 @@ describe Quarantine do
             }]
           )
 
-          quarantine.record_test(example, :quarantined, passed: true)
+          quarantine.on_test(example, :quarantined, passed: true)
 
           expect(quarantine.tests.length).to eq(1)
           expect(quarantine.tests[example.id].id).to eq(example.id)
@@ -146,7 +151,7 @@ describe Quarantine do
       let(:options) { { database: database_options, extra_attributes: proc { { build_number: 5 } } } }
 
       it 'adds a new flaky test to @tests' do |example|
-        quarantine.record_test(example, :quarantined, passed: true)
+        quarantine.on_test(example, :quarantined, passed: true)
 
         expect(quarantine.tests.length).to eq(1)
         expect(quarantine.tests[example.id].id).to eq(example.id)
@@ -158,30 +163,35 @@ describe Quarantine do
     end
   end
 
-  context '#upload_tests' do
+  context '#on_complete' do
     let(:quarantine) do
-      Quarantine.new(options.merge(test_statuses_table_name: 'test_statuses', failsafe_limit: failsafe_limit))
+      new_options = options.merge(
+        test_statuses_table_name: 'test_statuses',
+        failsafe_limit: failsafe_limit,
+        record_tests: true
+      )
+      Quarantine.new(new_options)
     end
     let(:failsafe_limit) { 10 }
 
     it 'uploads with a test' do |example|
-      quarantine.record_test(example, :quarantined, passed: true)
+      quarantine.on_test(example, :quarantined, passed: true)
       expect(quarantine.database).to receive(:write_items)
-      quarantine.upload_tests
+      quarantine.on_complete
     end
 
     it "doesn't upload with no tests" do |_example|
       expect(quarantine.database).to_not receive(:write_items)
-      quarantine.upload_tests
+      quarantine.on_complete
     end
 
     context 'with low failsafe limit' do
       let(:failsafe_limit) { 1 }
 
       it "doesn't upload" do |example|
-        quarantine.record_test(example, :quarantined, passed: true)
+        quarantine.on_test(example, :quarantined, passed: true)
         expect(quarantine.database).to_not receive(:write_items)
-        quarantine.upload_tests
+        quarantine.on_complete
       end
     end
   end

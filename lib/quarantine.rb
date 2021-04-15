@@ -66,7 +66,7 @@ class Quarantine
 
   # Scans the test_statuses from the database and store their IDs in quarantined_ids
   sig { void }
-  def fetch_test_statuses
+  def on_start
     begin
       test_statuses = database.fetch_items(@options[:test_statuses_table_name])
     rescue Quarantine::DatabaseError => e
@@ -103,24 +103,40 @@ class Quarantine
   end
 
   sig { void }
-  def upload_tests
-    return if @tests.empty? || @tests.values.count { |test| test.status == :quarantined } >= @options[:failsafe_limit]
+  def on_complete
+    quarantined_tests = @tests.values.select { |test| test.status == :quarantined }.sort_by(&:id)
 
-    begin
-      timestamp = Time.now.to_i / 1000 # Truncated millisecond from timestamp for reasons specific to Flexport
-      database.write_items(
-        @options[:test_statuses_table_name],
-        @tests.values.map { |item| item.to_hash.merge('updated_at' => timestamp) }
-      )
-    rescue Quarantine::DatabaseError => e
-      @database_failures << "#{e.cause&.class}: #{e.cause&.message}"
+    if !@options[:record_tests]
+      log('Recording tests disabled; skipping')
+    elsif @tests.empty?
+      log('No tests found; skipping recording')
+    elsif quarantined_tests.count { |test| old_tests[test.id]&.status != :quarantined } >= @options[:failsafe_limit]
+      log('Number of quarantined tests above failsafe limit; skipping recording')
+    else
+      begin
+        timestamp = Time.now.to_i / 1000 # Truncated millisecond from timestamp for reasons specific to Flexport
+        database.write_items(
+          @options[:test_statuses_table_name],
+          @tests.values.map { |item| item.to_hash.merge('updated_at' => timestamp) }
+        )
+      rescue Quarantine::DatabaseError => e
+        @database_failures << "#{e.cause&.class}: #{e.cause&.message}"
+      end
     end
+
+    log(<<~MESSAGE)
+      \n[quarantine] Quarantined tests:
+        #{quarantined_tests.map { |test| "#{test.id} #{test.full_description}" }.join("\n  ")}
+
+      [quarantine] Database errors:
+        #{@database_failures.join("\n  ")}
+    MESSAGE
   end
 
   # Param: RSpec::Core::Example
   # Add the example to the internal tests list
   sig { params(example: T.untyped, status: Symbol, passed: T::Boolean).void }
-  def record_test(example, status, passed:)
+  def on_test(example, status, passed:)
     extra_attributes = @options[:extra_attributes] ? @options[:extra_attributes].call(example) : {}
 
     new_consecutive_passes = passed ? (@old_tests[example.id]&.consecutive_passes || 0) + 1 : 0
@@ -145,15 +161,8 @@ class Quarantine
     @old_tests[example.id]&.status == :quarantined
   end
 
-  sig { returns(String) }
-  def summary
-    quarantined_tests = @tests.values.select { |test| test.status == :quarantined }.sort_by(&:id)
-    <<~MESSAGE
-      \n[quarantine] Quarantined tests:
-        #{quarantined_tests.map { |test| "#{test.id} #{test.full_description}" }.join("\n  ")}
-
-      [quarantine] Database errors:
-        #{@database_failures.join("\n  ")}
-    MESSAGE
+  sig { params(message: String).void }
+  def log(message)
+    @options[:log].call(message) if @options[:logging]
   end
 end
