@@ -69,33 +69,47 @@ class Quarantine
       end
     end
 
+    sig { params(example: RSpec::Core::Example).returns(T.nilable([Symbol, T::Boolean])) }
+    def self.final_status(example)
+      metadata = example.metadata
+
+      # The user may define their own after hook that marks an example as flaky in its metadata.
+      previously_quarantined = Quarantine::RSpecAdapter.quarantine.test_quarantined?(example) || metadata[:flaky]
+
+      if example.exception
+        # The example failed _this try_.
+        if metadata[:retry_attempts] + 1 == metadata[:retry]
+          # The example failed all its retries - if it's already quarantined, keep it that way;
+          # otherwise, mark it as failing.
+          if RSpec.configuration.skip_quarantined_tests && previously_quarantined
+            return [:quarantined, false]
+          else
+            return [:failing, false]
+          end
+        end
+        # The example failed, but it's not the final retry yet, so return nil.
+        return nil
+      elsif metadata[:retry_attempts] > 0
+        # The example passed this time, but failed one or more times before - the definition of a flaky test.
+        return [:quarantined, false]
+      elsif previously_quarantined
+        # The example passed the first time, but it's already marked quarantined, so keep it that way.
+        return [:quarantined, true]
+      else
+        return [:passing, true]
+      end
+    end
+
     # Purpose: binds quarantine to record test statuses
     sig { void }
     def self.bind_on_test
       ::RSpec.configure do |config|
         config.after(:each) do |example|
-          metadata = example.metadata
-
-          # optionally, the upstream RSpec configuration could define an after hook that marks an example as flaky in
-          # the example's metadata
-          quarantined = Quarantine::RSpecAdapter.quarantine.test_quarantined?(example) || metadata[:flaky]
-          if example.exception
-            if metadata[:retry_attempts] + 1 == metadata[:retry]
-              # will record the failed test if it's final retry from the rspec-retry gem
-              if RSpec.configuration.skip_quarantined_tests && quarantined
-                example.clear_exception!
-                Quarantine::RSpecAdapter.quarantine.on_test(example, :quarantined, passed: false)
-              else
-                Quarantine::RSpecAdapter.quarantine.on_test(example, :failing, passed: false)
-              end
-            end
-          elsif metadata[:retry_attempts] > 0
-            # will record the flaky test if it failed the first run but passed a subsequent run
-            Quarantine::RSpecAdapter.quarantine.on_test(example, :quarantined, passed: false)
-          elsif quarantined
-            Quarantine::RSpecAdapter.quarantine.on_test(example, :quarantined, passed: true)
-          else
-            Quarantine::RSpecAdapter.quarantine.on_test(example, :passing, passed: true)
+          result = Quarantine::RSpecAdapter.final_status(example)
+          if result
+            status, passed = result
+            example.clear_exception! if status == :quarantined && !passed
+            Quarantine::RSpecAdapter.quarantine.on_test(example, status, passed: passed)
           end
         end
       end
