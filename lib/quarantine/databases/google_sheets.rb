@@ -41,7 +41,13 @@ class Quarantine
         indexes = Hash[parsed_rows.each_with_index.map { |item, idx| [item['id'], idx] }]
 
         items.each do |item|
-          cells = headers.map { |header| item[header].to_s }
+          cells = headers.map do |header|
+            match = header.match(/^(extra_)?(.+)/)
+            extra, name = match[1..]
+            puts "header: #{header}, extra: #{extra}, name: #{name}"
+            value = extra ? item['extra_attributes'][name.to_sym] : item[name]
+            value.to_s
+          end
           row_idx = indexes[item['id']]
           if row_idx
             # Overwrite existing row
@@ -104,8 +110,10 @@ class Quarantine
           hash_row = Hash[headers.zip(row)]
           # TODO: use Google Sheets developer metadata to store type information
           unless hash_row['id'].empty?
-            hash_row['extra_attributes'] = JSON.parse(hash_row['extra_attributes']) if hash_row['extra_attributes']
-            hash_row
+            extra_values, base_values = hash_row.partition{|k, v| k.start_with?('extra_')}
+            base_hash = Hash[base_values]
+            base_hash['extra_attributes'] = Hash[extra_values]
+            base_hash
           end
         end.compact
       end
