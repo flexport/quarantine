@@ -9,23 +9,6 @@ require 'quarantine/databases/base'
 require 'quarantine/databases/dynamo_db'
 require 'quarantine/databases/google_sheets'
 
-module RSpec
-  module Core
-    class Example
-      extend T::Sig
-
-      # The implementation of clear_exception in rspec-retry doesn't work
-      # for examples that use `it_behaves_like`, so we implement our own version that
-      # clear the exception field recursively.
-      sig { void }
-      def clear_exception!
-        @exception = T.let(nil, T.untyped)
-        T.unsafe(self).example.clear_exception! if defined?(example)
-      end
-    end
-  end
-end
-
 class Quarantine
   extend T::Sig
 
