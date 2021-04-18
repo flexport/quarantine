@@ -88,15 +88,15 @@ class Quarantine
           end
         end
         # The example failed, but it's not the final retry yet, so return nil.
-        return nil
+        return nil # rubocop:disable Style/RedundantReturn
       elsif metadata[:retry_attempts] > 0
         # The example passed this time, but failed one or more times before - the definition of a flaky test.
-        return [:quarantined, false]
+        return [:quarantined, false] # rubocop:disable Style/RedundantReturn
       elsif previously_quarantined
         # The example passed the first time, but it's already marked quarantined, so keep it that way.
-        return [:quarantined, true]
+        return [:quarantined, true] # rubocop:disable Style/RedundantReturn
       else
-        return [:passing, true]
+        return [:passing, true] # rubocop:disable Style/RedundantReturn
       end
     end
 

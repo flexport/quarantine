@@ -43,7 +43,7 @@ class Quarantine
         items.each do |item|
           cells = headers.map do |header|
             match = header.match(/^(extra_)?(.+)/)
-            extra, name = match[1..]
+            extra, name = match[1..2]
             value = extra ? item['extra_attributes'][name] : item[name]
             value.to_s
           end
@@ -108,12 +108,12 @@ class Quarantine
         rows.map do |row|
           hash_row = Hash[headers.zip(row)]
           # TODO: use Google Sheets developer metadata to store type information
-          unless hash_row['id'].empty?
-            extra_values, base_values = hash_row.partition{|k, v| k.start_with?('extra_')}
-            base_hash = Hash[base_values]
-            base_hash['extra_attributes'] = Hash[extra_values]
-            base_hash
-          end
+          next nil if hash_row['id'].empty?
+
+          extra_values, base_values = hash_row.partition { |k, _v| k.start_with?('extra_') }
+          base_hash = Hash[base_values]
+          base_hash['extra_attributes'] = Hash[extra_values]
+          base_hash
         end.compact
       end
     end
