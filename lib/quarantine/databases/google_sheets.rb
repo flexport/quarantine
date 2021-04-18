@@ -44,8 +44,7 @@ class Quarantine
           cells = headers.map do |header|
             match = header.match(/^(extra_)?(.+)/)
             extra, name = match[1..]
-            puts "header: #{header}, extra: #{extra}, name: #{name}"
-            value = extra ? item['extra_attributes'][name.to_sym] : item[name]
+            value = extra ? item['extra_attributes'][name] : item[name]
             value.to_s
           end
           row_idx = indexes[item['id']]
