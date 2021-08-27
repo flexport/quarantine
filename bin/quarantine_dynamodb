@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 require 'optparse'
+require 'sorbet-runtime'
 
 require_relative '../lib/quarantine/cli'
 
