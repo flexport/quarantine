@@ -1,7 +1,9 @@
 # TEAM: devex
 
 exclude:
+  # Exclude deps for testing only
   - minitest
   - rainbow
-  - rspec-core
   - rubocop-rails
+  - ruby2_keywords
+  - activesupport
