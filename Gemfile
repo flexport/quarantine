@@ -8,6 +8,6 @@ group :test do
   gem 'rubocop', require: false
   gem 'rubocop-rails', require: false
   gem 'rubocop-sorbet', require: false
-  gem 'sorbet', '0.5.9297'
-  gem 'tapioca', '0.5.2', require: false
+  gem 'sorbet', '~> 0.5.6338'
+  gem 'tapioca', '~> 0.5.2', require: false
 end

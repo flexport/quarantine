@@ -226,8 +226,8 @@ DEPENDENCIES
   rubocop
   rubocop-rails
   rubocop-sorbet
-  sorbet (= 0.5.9297)
-  tapioca (= 0.5.2)
+  sorbet (~> 0.5.6338)
+  tapioca (~> 0.5.2)
 
 BUNDLED WITH
    2.1.4
