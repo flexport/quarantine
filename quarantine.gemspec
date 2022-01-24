@@ -18,6 +18,7 @@ Gem::Specification.new do |s|
   s.executables = ['quarantine_dynamodb']
   s.required_ruby_version = '>= 2.0'
 
+  s.add_dependency('activesupport', '~> 6.1')
   s.add_dependency('rspec', '~> 3.0')
   s.add_dependency('rspec-retry', '~> 0.6')
   s.add_dependency('sorbet-runtime', '~> 0.5.6338')
