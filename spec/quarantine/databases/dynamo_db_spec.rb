@@ -1,4 +1,5 @@
 # typed: false
+
 require 'spec_helper'
 
 describe Quarantine::Databases::DynamoDB do
@@ -128,19 +129,19 @@ describe Quarantine::Databases::DynamoDB do
         a6: 'a6'
       }
 
-      expect(database.dynamodb).to receive(:create_table).with(
-        table_name: 'foo',
-        attribute_definitions: [
-          { attribute_name: 'a1', attribute_type: 'S' },
-          { attribute_name: 'a2', attribute_type: 'S' }
-        ],
-        key_schema: [
-          { attribute_name: 'a1', key_type: 'HASH' },
-          { attribute_name: 'a2', key_type: 'RANGE' }
-        ],
-        a3: { a4: 'a4', a5: 'a5' },
-        a6: 'a6'
-      )
+      expect(database.dynamodb).to receive(:create_table).with({
+                                                                 table_name: 'foo',
+                                                                 attribute_definitions: [
+                                                                   { attribute_name: 'a1', attribute_type: 'S' },
+                                                                   { attribute_name: 'a2', attribute_type: 'S' }
+                                                                 ],
+                                                                 key_schema: [
+                                                                   { attribute_name: 'a1', key_type: 'HASH' },
+                                                                   { attribute_name: 'a2', key_type: 'RANGE' }
+                                                                 ],
+                                                                 a3: { a4: 'a4', a5: 'a5' },
+                                                                 a6: 'a6'
+                                                               })
 
       database.create_table('foo', attributes, additional_arguments)
     end
