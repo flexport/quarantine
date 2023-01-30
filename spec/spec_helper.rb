@@ -1,4 +1,5 @@
 # typed: strict
+
 require 'quarantine'
 require 'rspec/retry'
 
