@@ -97,6 +97,8 @@ GEM
     multipart-post (2.3.0)
     nokogiri (1.14.0-x86_64-darwin)
       racc (~> 1.4)
+    nokogiri (1.14.0-x86_64-linux)
+      racc (~> 1.4)
     os (1.1.4)
     parallel (1.22.1)
     parser (3.2.0.0)
@@ -164,6 +166,7 @@ GEM
       sorbet-static (= 0.5.10634)
     sorbet-runtime (0.5.10634)
     sorbet-static (0.5.10634-universal-darwin-22)
+    sorbet-static (0.5.10634-x86_64-linux)
     spoom (1.1.15)
       sorbet (>= 0.5.10187)
       sorbet-runtime (>= 0.5.9204)
@@ -195,6 +198,7 @@ GEM
 
 PLATFORMS
   x86_64-darwin-22
+  x86_64-linux
 
 DEPENDENCIES
   aws-sdk-dynamodb (~> 1)
