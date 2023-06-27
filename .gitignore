@@ -1,2 +1,6 @@
 *.gem
 .ruby-version
+
+# vim
+*.swp
+*.swo
