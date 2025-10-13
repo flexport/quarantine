@@ -65,6 +65,32 @@ class Quarantine
         raise Quarantine::DatabaseError
       end
 
+      sig do
+        params(
+          table_name: String,
+          items: T::Array[Item]
+        ).void
+      end
+      def append_items(table_name, items)
+        worksheet = spreadsheet.worksheet_by_title(table_name)
+        first_row = worksheet.rows.first
+        headers = first_row ? first_row.reject { |cell| cell.nil? || cell.empty? } : []
+
+        current_row_count = worksheet.num_rows
+
+        new_rows = items.map do |item|
+          headers.map do |header|
+            item[header].to_s
+          end
+        end
+
+        # Always insert all items at the end without checking for existing IDs
+        worksheet.insert_rows(current_row_count + 1, new_rows)
+        worksheet.save
+      rescue GoogleDrive::Error, Google::Apis::Error
+        raise Quarantine::DatabaseError
+      end
+
       private
 
       sig { returns(GoogleDrive::Session) }
